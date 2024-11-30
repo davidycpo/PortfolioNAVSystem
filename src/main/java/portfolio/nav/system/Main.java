@@ -44,9 +44,8 @@ public class Main {
 					continue;
 				}
 				database.insertAsset(holding.getTicker());
-
-				database.purgeDatabase();
 			}
+//			database.purgeDatabase();
 		} catch (Exception e) {
 			System.out.println("Failed to save portfolio underlying asset into db, error: " + e.getMessage());
 		} finally {
