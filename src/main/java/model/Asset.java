@@ -10,12 +10,12 @@ public class Asset {
 	private AssetType assetType;
 
 	// the strike price, only available for option
-	private double strike;
+	private Double strike;
 
 	// maturity date of the option, only available for option
 	private Date maturityDate;
 
-	public Asset(String ticker, AssetType assetType, double strike, Date maturityDate) {
+	public Asset(String ticker, AssetType assetType, Double strike, Date maturityDate) {
 		this.ticker = ticker;
 		this.assetType = assetType;
 		this.strike = strike;
@@ -38,11 +38,11 @@ public class Asset {
 		this.assetType = assetType;
 	}
 
-	public double getStrike() {
+	public Double getStrike() {
 		return strike;
 	}
 
-	public void setStrike(double strike) {
+	public void setStrike(Double strike) {
 		this.strike = strike;
 	}
 
