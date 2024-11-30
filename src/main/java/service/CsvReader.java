@@ -42,10 +42,10 @@ public class CsvReader {
 			}
 			String symbol = cell.get(0);
 			String ticker;
-			AssetType assetType = null;
+			AssetType assetType;
 			Date maturityDate = null;
 			Double strike = null;
-			Double position;
+			double position;
 			if (symbol.contains(SYMBOL_SEPARATOR)) {
 				// An Option
 				List<String> symbolList = Splitter.on("-").trimResults().splitToList(symbol);
@@ -96,7 +96,7 @@ public class CsvReader {
 			// Position
 			String positionStr = cell.get(1);
 			try {
-				position = Double.valueOf(positionStr);
+				position = Double.parseDouble(positionStr);
 			} catch (NumberFormatException e) {
 				System.out.println("Invalid position: " + positionStr + " line #" + count);
 				count++;
