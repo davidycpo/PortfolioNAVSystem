@@ -92,13 +92,19 @@ public class Database {
 				String tickerDB = result.getString(1);
 				AssetType assetType = AssetType.valueOf(result.getString(2));
 				Double strike = result.getDouble(3);
-				Date maturityDate = result.getDate(4);
+
+				String dateStr = result.getString(4);
+				Date maturityDate = null;
+				if (dateStr != null) {
+					maturityDate = Date.valueOf(result.getString(4));
+				}
 				Double expectedReturn = result.getDouble(5);
 				Double annualizedStandardDeviation = result.getDouble(6);
 				return new AssetEntity(tickerDB, assetType, strike, maturityDate, expectedReturn,
 						annualizedStandardDeviation);
 			}
-			System.out.println("Asset not found with ticker: " + ticker + " and assetType: " + type);
+			// System.err.println("Asset not found with ticker: " + ticker + "
+			// and assetType: " + type);
 			return null;
 		}
 	}
