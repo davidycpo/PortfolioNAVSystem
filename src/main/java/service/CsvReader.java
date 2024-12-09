@@ -10,7 +10,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.Files;
 
-import model.Asset;
+import model.AssetEntity;
 import model.AssetType;
 import model.Holding;
 import model.Portfolio;
@@ -102,9 +102,9 @@ public class CsvReader {
 				count++;
 				continue;
 			}
-			Asset asset = new Asset(ticker, assetType, strike, maturityDate);
-			Holding holding = new Holding(asset, position);
-			holding.setTicker(asset);
+			AssetEntity assetEntity = new AssetEntity(ticker, assetType, strike, maturityDate);
+			Holding holding = new Holding(assetEntity, position);
+			holding.setTicker(assetEntity);
 			portfolio.addHolding(holding);
 			count++;
 		}

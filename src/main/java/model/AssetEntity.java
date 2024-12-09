@@ -2,7 +2,7 @@ package model;
 
 import java.sql.Date;
 
-public class Asset {
+public class AssetEntity {
 	// Identifier of the asset, usually symbol
 	private String ticker;
 
@@ -15,11 +15,27 @@ public class Asset {
 	// maturity date of the option, only available for option
 	private Date maturityDate;
 
-	public Asset(String ticker, AssetType assetType, Double strike, Date maturityDate) {
+	// expected return, a unique number between 0-1
+	private Double expectedReturn;
+
+	// annualized standard
+	private Double annualizedStandardDeviation;
+
+	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate) {
 		this.ticker = ticker;
 		this.assetType = assetType;
 		this.strike = strike;
 		this.maturityDate = maturityDate;
+	}
+
+	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate, Double expectedReturn,
+			Double annualizedStandardDeviation) {
+		this.ticker = ticker;
+		this.assetType = assetType;
+		this.strike = strike;
+		this.maturityDate = maturityDate;
+		this.expectedReturn = expectedReturn;
+		this.annualizedStandardDeviation = annualizedStandardDeviation;
 	}
 
 	public String getTicker() {
@@ -54,10 +70,24 @@ public class Asset {
 		this.maturityDate = maturityDate;
 	}
 
+	public Double getExpectedReturn() {
+		return expectedReturn;
+	}
+
+	public void setExpectedReturn(Double expectedReturn) {
+	}
+
+	public Double getAnnualizedStandardDeviation() {
+		return annualizedStandardDeviation;
+	}
+
+	public void setAnnualizedStandardDeviation(Double annualizedStandardDeviation) {
+	}
+
 	@Override
 	public String toString() {
 		return "Asset{" + "ticker='" + ticker + '\'' + ", assetType=" + assetType + ", strike=" + strike
-				+ ", maturityDate=" + maturityDate + '}';
+				+ ", maturityDate=" + maturityDate + ", expectedReturn=" + expectedReturn
+				+ ", annualizedStandardDeviation=" + annualizedStandardDeviation + '}';
 	}
-
 }

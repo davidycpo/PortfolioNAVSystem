@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import database.Database;
-import model.Asset;
-import model.AssetType;
 import model.Holding;
 import model.Portfolio;
 import service.CsvReader;
@@ -14,26 +12,18 @@ import service.CsvReader;
 public class PortfolioNavSystem {
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
+	public static final String POSITION_CSV_PATH = "src/main/resources/position.csv";
 
 	public static void main(String[] args) {
-		// parse position file
-		CsvReader csvReader = new CsvReader();
-		File positionFile = new File("src/main/resources/position.csv");
-		Portfolio portfolio = null;
-		try {
-			portfolio = csvReader.parseCSV(positionFile);
-		} catch (IOException e) {
-			System.out.println("Failed to parse position csv, error: " + e.getMessage());
-		}
-		if (portfolio == null) {
-			System.out.println("No position available");
+		File positionFile = new File(POSITION_CSV_PATH);
+		Portfolio portfolio = parsePortfolioFromCSV(positionFile);
+		if (portfolio == null)
 			return;
-		}
 
-		for(Holding holding : portfolio.getHoldings()) {
-			System.out.println(holding);
-		}
+		persistPortfolio(portfolio);
+	}
 
+	private static void persistPortfolio(Portfolio portfolio) {
 		// Save asset into DB
 		Database database = null;
 		try {
@@ -45,7 +35,7 @@ public class PortfolioNavSystem {
 				}
 				database.insertAsset(holding.getTicker());
 			}
-//			database.purgeDatabase();
+			// database.purgeDatabase();
 		} catch (Exception e) {
 			System.out.println("Failed to save portfolio underlying asset into db, error: " + e.getMessage());
 		} finally {
@@ -57,29 +47,25 @@ public class PortfolioNavSystem {
 				}
 			}
 		}
-
 	}
 
-	private static void testDB() {
-		Database database = null;
+	private static Portfolio parsePortfolioFromCSV(File csv) {
+		// parse position file
+		CsvReader csvReader = new CsvReader();
+		Portfolio portfolio = null;
 		try {
-			database = new Database(DB_URL);
-			Asset asset = new Asset("AAPL", AssetType.STOCK, 0d, null);
-			database.insertAsset(asset);
-			Asset apple = database.getAssetByTickerAndType("AAPL", AssetType.STOCK);
-			System.out.println(apple);
-			database.purgeDatabase();
-
-		} catch (SQLException e) {
-			System.out.println("Failed to test db" + e.getMessage());
-		} finally {
-			if (database != null) {
-				try {
-					database.close();
-				} catch (SQLException e) {
-					System.out.println("Failed to close db" + e.getMessage());
-				}
-			}
+			portfolio = csvReader.parseCSV(csv);
+		} catch (IOException e) {
+			System.out.println("Failed to parse position csv, error: " + e.getMessage());
 		}
+		if (portfolio == null) {
+			System.out.println("No position available");
+			return null;
+		}
+
+		for (Holding holding : portfolio.getHoldings()) {
+			System.out.println(holding);
+		}
+		return portfolio;
 	}
 }

@@ -1,21 +1,21 @@
 package model;
 
 public class Holding {
-	private Asset ticker;
+	private AssetEntity ticker;
 	private Double position;
 	private Double price;
 	private Double value;
 
-	public Holding(Asset ticker, Double position) {
+	public Holding(AssetEntity ticker, Double position) {
 		this.ticker = ticker;
 		this.position = position;
 	}
 
-	public Asset getTicker() {
+	public AssetEntity getTicker() {
 		return ticker;
 	}
 
-	public void setTicker(Asset ticker) {
+	public void setTicker(AssetEntity ticker) {
 		this.ticker = ticker;
 	}
 
