@@ -2,16 +2,15 @@ package portfolio.nav.system;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.sql.SQLException;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import database.Database;
-import market.data.provider.MarketDataProvider;
 import model.Holding;
 import model.Portfolio;
 import model.PriceChangeOuterClass;
-import model.PriceChangeQueue;
 import service.CsvReader;
 
 public class PortfolioNavSystem {
@@ -28,17 +27,20 @@ public class PortfolioNavSystem {
 		persistPortfolio(portfolio);
 
 		// Price Change Listener
-		PriceChangeQueue priceChangeQueue = MarketDataProvider.getPriceChangeQueue();
-
-		try {
+		try (ServerSocket serverSocket = new ServerSocket(5555)) {
 			while (true) {
-				byte[] data = priceChangeQueue.consume();
-				PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.parseFrom(data);
-				System.out.println(
-						"Processed: Ticker: " + priceChange.getTicker() + ", Price: " + priceChange.getPrice());
+				try (Socket socket = serverSocket.accept();
+						ObjectInputStream input = new ObjectInputStream(socket.getInputStream())) {
+					byte[] data = (byte[]) input.readObject();
+					PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.parseFrom(data);
+					System.out.println("Received Price Change, Ticker: " + priceChange.getTicker() + ", Price: "
+							+ priceChange.getPrice());
+				} catch (ClassNotFoundException e) {
+					System.err.println("Failed to parse priceChange, error: " + e.getMessage());
+				}
 			}
-		} catch (InvalidProtocolBufferException e) {
-			System.err.println("InvalidProtocolBufferException: " + e.getMessage());
+		} catch (IOException e) {
+			System.err.println("Failed to open socket, error: " + e.getMessage());
 		}
 	}
 
