@@ -42,4 +42,4 @@ default_preference.epf
 ### Mac OS ###
 .DS_Store
 /.idea/eclipseCodeFormatter.xml
-/src/main/resources/asset.sqlite
+/src/main/resources/assetEntity.sqlite
