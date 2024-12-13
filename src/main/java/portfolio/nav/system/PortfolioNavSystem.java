@@ -51,7 +51,6 @@ public class PortfolioNavSystem {
 						if (priceChange.getTicker().equals(holding.getAsset().getTicker())) {
 							holding.getAsset().setPrice(priceChange.getPrice());
 							holding.calculatePrice();
-							break;
 						}
 					}
 
