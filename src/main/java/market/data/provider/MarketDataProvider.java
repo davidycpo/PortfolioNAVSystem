@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import database.Database;
 import model.AssetEntity;
@@ -23,6 +24,7 @@ public class MarketDataProvider {
 	public static final double MAX_RANDOM_VALUE = 500d;
 	public static final double MIN_TIME_DELTA = 0.5;
 	public static final double MAX_TIME_DELTA = 2;
+	private static final Random random = new Random();
 
 	public static void main(String[] args) {
 		// Get Stock from DB
@@ -73,35 +75,38 @@ public class MarketDataProvider {
 		System.out.println();
 
 		while (true) {
-			for (Stock stock : stocks) {
-				counter++;
-				double deltaTime = Utils.getRandomDouble(MIN_TIME_DELTA, MAX_TIME_DELTA) * 1000;
-				// System.out.println("Time interval: " + deltaTime + "\n");
+			counter++;
+			double deltaTime = Utils.getRandomDouble(MIN_TIME_DELTA, MAX_TIME_DELTA) * 1000;
+			// System.out.println("Time interval: " + deltaTime + "\n");
 
-				// Sleep for delta time
-				try {
-					Thread.sleep((long) deltaTime);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					System.err.println("Thread was interrupted");
-					break;
-				}
-
-				// Calculate Stock Movement
-				System.out.println("## " + counter + " Market Data Update");
-				double factor = getBrownianMotionFactor(deltaTime, stock.getExpectedReturn(),
-						stock.getAnnualizedStandardDeviation());
-				// System.out.println(stock.getTicker() + " factor: " + factor);
-				double newStockPrice = stock.getPrice() + stock.getPrice() * factor;
-				stock.setPrice(newStockPrice);
-
-				System.out.println(stock.getTicker() + " change to " + Math.ceil(stock.getPrice()) + "\n");
-
-				// Publish Price Change
-				publishPriceChange(stock);
-
+			// Sleep for delta time
+			try {
+				Thread.sleep((long) deltaTime);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				System.err.println("Thread was interrupted");
+				break;
 			}
+
+			// Pick A Random Stock
+			int randomIndex = (int) (Math.random() * stocks.size());
+			Stock stock = stocks.get(randomIndex);
+
+			// Calculate Stock Movement
+			System.out.println("## " + counter + " Market Data Update");
+			double factor = getBrownianMotionFactor(deltaTime, stock.getExpectedReturn(),
+					stock.getAnnualizedStandardDeviation());
+			// System.out.println(stock.getTicker() + " factor: " + factor);
+			double newStockPrice = stock.getPrice() + stock.getPrice() * factor;
+			stock.setPrice(newStockPrice);
+
+			System.out.println(stock.getTicker() + " change to " + Math.ceil(stock.getPrice()) + "\n");
+
+			// Publish Price Change
+			publishPriceChange(stock);
+
 		}
+
 	}
 
 	private static void publishPriceChange(Stock stock) {
