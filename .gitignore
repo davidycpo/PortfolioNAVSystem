@@ -43,3 +43,4 @@ default_preference.epf
 .DS_Store
 /.idea/eclipseCodeFormatter.xml
 /src/main/resources/assetEntity.sqlite
+/src/main/resources/asset.sqlite
