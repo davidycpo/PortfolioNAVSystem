@@ -11,7 +11,7 @@ import model.Holding;
 import model.Portfolio;
 import service.CsvReader;
 
-public class Main {
+public class PortfolioNavSystem {
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 
