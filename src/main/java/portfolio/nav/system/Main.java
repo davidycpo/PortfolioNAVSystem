@@ -8,6 +8,12 @@ import model.AssetType;
 
 public class Main {
 	public static void main(String[] args) {
+		testDB();
+		System.out.println("import position file");
+
+	}
+
+	private static void testDB() {
 		String dbUrl = "jdbc:sqlite:asset.sqlite";
 		Database database = null;
 		try {
@@ -16,6 +22,7 @@ public class Main {
 			database.insertAsset(asset);
 			Asset apple = database.getAsset("AAPL");
 			System.out.println(apple);
+
 		} catch (SQLException e) {
 			System.out.println("Failed to test db" + e.getMessage());
 		} finally {
@@ -27,8 +34,5 @@ public class Main {
 				}
 			}
 		}
-
-		System.out.println("import position file");
-
 	}
 }

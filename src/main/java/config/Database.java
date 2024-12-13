@@ -1,6 +1,7 @@
 package config;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,6 +34,12 @@ public class Database {
 		if (Utils.isBlank(asset.getTicker())) {
 			throw new IllegalArgumentException("Asset ticker is required");
 		}
+
+		if (getAsset(asset.getTicker()) != null) {
+			System.out.println("Asset " + asset.getTicker() + " already exists");
+			return;
+		}
+
 		if (asset.getAssetType() == null) {
 			throw new IllegalArgumentException("Asset Type is required");
 		}
@@ -46,8 +53,6 @@ public class Database {
 			}
 		}
 
-		System.out.println("Inserting Asset");
-
 		String insertSQL = "INSERT INTO assets (ticker, assetType, strike, maturityDate) VALUES (?, ?, ? , ?)";
 		try (PreparedStatement statement = connection.prepareStatement(insertSQL)) {
 			statement.setString(1, asset.getTicker());
@@ -57,15 +62,23 @@ public class Database {
 			statement.execute();
 		}
 
-		System.out.println("Inserted Asset");
+		System.out.println("Inserted Asset with ticker " + asset.getTicker());
 	}
 
 	public Asset getAsset(final String ticker) throws SQLException {
 		String selectSQL = "SELECT * FROM assets WHERE ticker = ?";
 		try (PreparedStatement statement = connection.prepareStatement(selectSQL)) {
 			statement.setString(1, ticker);
-			ResultSet rs = statement.executeQuery();
-			return new Asset(rs.getString(1), AssetType.valueOf(rs.getString(2)), rs.getDouble(3), rs.getDate(4));
+			ResultSet result = statement.executeQuery();
+			if (result.next()) {
+				String tickerDB = result.getString(1);
+				AssetType assetType = AssetType.valueOf(result.getString(2));
+				double strike = result.getDouble(3);
+				Date maturityDate = result.getDate(4);
+				return new Asset(tickerDB, assetType, strike, maturityDate);
+			}
+			System.out.println("Asset not found with ticker: " + ticker);
+			return null;
 		}
 	}
 
