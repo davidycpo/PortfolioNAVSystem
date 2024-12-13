@@ -2,6 +2,15 @@ package model;
 
 public enum AssetType {
 	STOCK,
-	CALL_OPTION,
-	PUT_OPTION
+	CALL,
+	PUT;
+
+	public static AssetType fromString(String string) {
+		for (AssetType assetType : AssetType.values()) {
+			if (assetType.toString().equals(string)) {
+				return assetType;
+			}
+		}
+		return null;
+	}
 }

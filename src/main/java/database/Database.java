@@ -1,4 +1,4 @@
-package config;
+package database;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -22,8 +22,8 @@ public class Database {
 
 	private void initializeDatabase() throws SQLException {
 		System.out.println("Initializing database...");
-		String createTableSQL = "CREATE TABLE IF NOT EXISTS assets (" + "ticker TEXT PRIMARY KEY,"
-				+ "assetType TEXT NOT NULL," + "strike REAL," + "maturityDate REAL" + ");";
+		String createTableSQL = "CREATE TABLE IF NOT EXISTS assets " + "(ticker TEXT, " + "assetType TEXT NOT NULL, "
+				+ "strike REAL," + "maturityDate REAL, " + "PRIMARY KEY (ticker, assetType));";
 		try (Statement statement = connection.createStatement()) {
 			statement.execute(createTableSQL);
 		}
@@ -35,8 +35,9 @@ public class Database {
 			throw new IllegalArgumentException("Asset ticker is required");
 		}
 
-		if (getAsset(asset.getTicker()) != null) {
-			System.out.println("Asset " + asset.getTicker() + " already exists");
+		if (getAssetByTickerAndType(asset.getTicker(), asset.getAssetType()) != null) {
+			System.out.println("Asset with Ticker: " + asset.getTicker() + " and Asset Type: " + asset.getAssetType()
+					+ " already exists");
 			return;
 		}
 
@@ -44,8 +45,8 @@ public class Database {
 			throw new IllegalArgumentException("Asset Type is required");
 		}
 
-		if (asset.getAssetType() == AssetType.CALL_OPTION || asset.getAssetType() == AssetType.PUT_OPTION) {
-			if (asset.getStrike() == 0d) {
+		if (asset.getAssetType() == AssetType.CALL || asset.getAssetType() == AssetType.PUT) {
+			if (asset.getStrike() == null) {
 				throw new IllegalArgumentException("Strike is required");
 			}
 			if (asset.getMaturityDate() == null) {
@@ -57,35 +58,53 @@ public class Database {
 		try (PreparedStatement statement = connection.prepareStatement(insertSQL)) {
 			statement.setString(1, asset.getTicker());
 			statement.setString(2, asset.getAssetType().toString());
-			statement.setDouble(3, asset.getStrike());
-			statement.setDate(4, asset.getMaturityDate());
+			if (asset.getStrike() != null) {
+				statement.setDouble(3, asset.getStrike());
+			}
+			if (asset.getMaturityDate() != null) {
+				statement.setDate(4, asset.getMaturityDate());
+			}
 			statement.execute();
 		}
 
-		System.out.println("Inserted Asset with ticker " + asset.getTicker());
+		System.out.println("Inserted Asset with ticker " + asset.getTicker() + " type " + asset.getAssetType());
 	}
 
-	public Asset getAsset(final String ticker) throws SQLException {
-		String selectSQL = "SELECT * FROM assets WHERE ticker = ?";
+	public Asset getAssetByTickerAndType(final String ticker, final AssetType type) throws SQLException {
+		if (ticker == null) {
+			throw new IllegalArgumentException("Ticker is required");
+		}
+		if (type == null) {
+			throw new IllegalArgumentException("Asset type is required");
+		}
+		String selectSQL = "SELECT * FROM assets WHERE ticker = ? and assetType = ?";
 		try (PreparedStatement statement = connection.prepareStatement(selectSQL)) {
 			statement.setString(1, ticker);
+			statement.setString(2, type.toString());
 			ResultSet result = statement.executeQuery();
 			if (result.next()) {
 				String tickerDB = result.getString(1);
 				AssetType assetType = AssetType.valueOf(result.getString(2));
-				double strike = result.getDouble(3);
+				Double strike = result.getDouble(3);
 				Date maturityDate = result.getDate(4);
 				return new Asset(tickerDB, assetType, strike, maturityDate);
 			}
-			System.out.println("Asset not found with ticker: " + ticker);
+			System.out.println("Asset not found with ticker: " + ticker + " and assetType: " + type);
 			return null;
 		}
 	}
 
-	// Close the connection when done
 	public void close() throws SQLException {
 		if (connection != null) {
 			connection.close();
+		}
+	}
+
+	public void purgeDatabase() throws SQLException {
+		System.out.println("Purging database...");
+		String deleteSQL = "DELETE FROM assets";
+		try (Statement statement = connection.createStatement()) {
+			statement.executeUpdate(deleteSQL);
 		}
 	}
 }
