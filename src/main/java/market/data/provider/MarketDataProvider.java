@@ -8,6 +8,8 @@ import java.util.Random;
 import database.Database;
 import model.AssetEntity;
 import model.AssetType;
+import model.PriceChangeOuterClass;
+import model.PriceChangeQueue;
 import model.Stock;
 
 public class MarketDataProvider {
@@ -15,6 +17,8 @@ public class MarketDataProvider {
 	public static final int CONSTANT_FACTOR = 7257600;
 
 	private static final Random random = new Random();
+
+	private static final PriceChangeQueue priceChangeQueue = new PriceChangeQueue();
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	public static final double MIN_RANDOM_VALUE = 200d;
@@ -37,6 +41,10 @@ public class MarketDataProvider {
 		publishStockMovement(stocks);
 	}
 
+	public static PriceChangeQueue getPriceChangeQueue() {
+		return priceChangeQueue;
+	}
+
 	private static List<AssetEntity> getAssetEntities() {
 		List<AssetEntity> assetEntities = new ArrayList<>();
 		Database database = null;
@@ -44,19 +52,19 @@ public class MarketDataProvider {
 			database = new Database(DB_URL);
 			assetEntities = database.getAssetsByType(AssetType.STOCK);
 		} catch (Exception e) {
-			System.out.println("Failed to find assets from db, error: " + e.getMessage());
+			System.err.println("Failed to find assets from db, error: " + e.getMessage());
 		} finally {
 			if (database != null) {
 				try {
 					database.close();
 				} catch (SQLException e) {
-					System.out.println("Failed to close db" + e.getMessage());
+					System.err.println("Failed to close db" + e.getMessage());
 				}
 			}
 		}
 
 		if (assetEntities == null || assetEntities.isEmpty()) {
-			System.out.println("No stock asset is found");
+			System.err.println("No stock asset is found");
 			return null;
 		}
 		return assetEntities;
@@ -96,7 +104,14 @@ public class MarketDataProvider {
 				System.out.println(stock.getTicker() + " change to " + Math.ceil(stock.getPrice()) + "\n");
 
 				// Publish Price Change
+				PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.newBuilder()
+						.setTicker(stock.getTicker())
+						.setPrice(stock.getPrice())
+						.build();
 
+				priceChangeQueue.publish(priceChange.toByteArray());
+				System.out
+						.println("Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()));
 			}
 		}
 	}

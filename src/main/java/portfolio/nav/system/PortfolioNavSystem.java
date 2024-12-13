@@ -4,9 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import database.Database;
+import market.data.provider.MarketDataProvider;
 import model.Holding;
 import model.Portfolio;
+import model.PriceChangeOuterClass;
+import model.PriceChangeQueue;
 import service.CsvReader;
 
 public class PortfolioNavSystem {
@@ -21,6 +26,20 @@ public class PortfolioNavSystem {
 			return;
 
 		persistPortfolio(portfolio);
+
+		// Price Change Listener
+		PriceChangeQueue priceChangeQueue = MarketDataProvider.getPriceChangeQueue();
+
+		try {
+			while (true) {
+				byte[] data = priceChangeQueue.consume();
+				PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.parseFrom(data);
+				System.out.println(
+						"Processed: Ticker: " + priceChange.getTicker() + ", Price: " + priceChange.getPrice());
+			}
+		} catch (InvalidProtocolBufferException e) {
+			System.err.println("InvalidProtocolBufferException: " + e.getMessage());
+		}
 	}
 
 	private static void persistPortfolio(Portfolio portfolio) {
@@ -30,20 +49,19 @@ public class PortfolioNavSystem {
 			database = new Database(DB_URL);
 			for (Holding holding : portfolio.getHoldings()) {
 				if (holding.getTicker() == null) {
-					System.out.println("Holding's ticker is null");
+					System.err.println("Holding's ticker is null");
 					continue;
 				}
 				database.insertAsset(holding.getTicker());
 			}
-			// database.purgeDatabase();
 		} catch (Exception e) {
-			System.out.println("Failed to save portfolio underlying asset into db, error: " + e.getMessage());
+			System.err.println("Failed to save portfolio underlying asset into db, error: " + e + e.getMessage());
 		} finally {
 			if (database != null) {
 				try {
 					database.close();
 				} catch (SQLException e) {
-					System.out.println("Failed to close db" + e.getMessage());
+					System.err.println("Failed to close db" + e.getMessage());
 				}
 			}
 		}
@@ -56,10 +74,10 @@ public class PortfolioNavSystem {
 		try {
 			portfolio = csvReader.parseCSV(csv);
 		} catch (IOException e) {
-			System.out.println("Failed to parse position csv, error: " + e.getMessage());
+			System.err.println("Failed to parse position csv, error: " + e.getMessage());
 		}
 		if (portfolio == null) {
-			System.out.println("No position available");
+			System.err.println("No position available");
 			return null;
 		}
 

@@ -36,7 +36,7 @@ public class CsvReader {
 			}
 			List<String> cell = Splitter.on(CELL_SEPARATOR).trimResults().splitToList(line);
 			if (cell.size() != 2) {
-				System.out.println("Invalid line: " + line + " line #" + count);
+				System.err.println("Invalid line: " + line + " line #" + count);
 				count++;
 				continue;
 			}
@@ -50,7 +50,7 @@ public class CsvReader {
 				// An Option
 				List<String> symbolList = Splitter.on("-").trimResults().splitToList(symbol);
 				if (symbolList.size() != 5) {
-					System.out.println("Invalid symbol: " + symbol + " line #" + count);
+					System.err.println("Invalid symbol: " + symbol + " line #" + count);
 					count++;
 					continue;
 				}
@@ -64,7 +64,7 @@ public class CsvReader {
 				try {
 					maturityDate = Utils.parseDate(maturityDateStr);
 				} catch (ParseException e) {
-					System.out.println("Failed to parse maturityDate: " + maturityDateStr + " line #" + count
+					System.err.println("Failed to parse maturityDate: " + maturityDateStr + " line #" + count
 							+ " error: " + e.getMessage());
 					count++;
 					continue;
@@ -73,7 +73,7 @@ public class CsvReader {
 				try {
 					strike = Double.valueOf(strikeStr);
 				} catch (NumberFormatException e) {
-					System.out.println("Invalid strike: " + strikeStr + " line #" + count);
+					System.err.println("Invalid strike: " + strikeStr + " line #" + count);
 					count++;
 					continue;
 				}
@@ -83,7 +83,7 @@ public class CsvReader {
 				} else if (PUT_OPTION_TYPE.equalsIgnoreCase(typeStr)) {
 					assetType = AssetType.PUT;
 				} else {
-					System.out.println("Invalid option type: " + typeStr + " line #" + count);
+					System.err.println("Invalid option type: " + typeStr + " line #" + count);
 					count++;
 					continue;
 				}
@@ -98,7 +98,7 @@ public class CsvReader {
 			try {
 				position = Double.parseDouble(positionStr);
 			} catch (NumberFormatException e) {
-				System.out.println("Invalid position: " + positionStr + " line #" + count);
+				System.err.println("Invalid position: " + positionStr + " line #" + count);
 				count++;
 				continue;
 			}
