@@ -1,5 +1,8 @@
 package market.data.provider;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +12,6 @@ import database.Database;
 import model.AssetEntity;
 import model.AssetType;
 import model.PriceChangeOuterClass;
-import model.PriceChangeQueue;
 import model.Stock;
 
 public class MarketDataProvider {
@@ -17,8 +19,6 @@ public class MarketDataProvider {
 	public static final int CONSTANT_FACTOR = 7257600;
 
 	private static final Random random = new Random();
-
-	private static final PriceChangeQueue priceChangeQueue = new PriceChangeQueue();
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	public static final double MIN_RANDOM_VALUE = 200d;
@@ -39,10 +39,6 @@ public class MarketDataProvider {
 
 		// Simulate stock movement and publish price change
 		publishStockMovement(stocks);
-	}
-
-	public static PriceChangeQueue getPriceChangeQueue() {
-		return priceChangeQueue;
 	}
 
 	private static List<AssetEntity> getAssetEntities() {
@@ -109,9 +105,15 @@ public class MarketDataProvider {
 						.setPrice(stock.getPrice())
 						.build();
 
-				priceChangeQueue.publish(priceChange.toByteArray());
-				System.out
-						.println("Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()));
+				try (Socket socket = new Socket("localhost", 5555);
+						ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
+					output.writeObject(priceChange.toByteArray());
+					System.out.println(
+							"Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()));
+				} catch (IOException e) {
+					System.err.println("Failed to publish price change: " + e.getMessage());
+				}
+
 			}
 		}
 	}
