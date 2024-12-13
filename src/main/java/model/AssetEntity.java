@@ -16,17 +16,13 @@ public class AssetEntity {
 	private Date maturityDate;
 
 	// expected return, a unique number between 0-1
-	private Double expectedReturn;
+	private final Double expectedReturn;
 
 	// annualized standard
-	private Double annualizedStandardDeviation;
+	private final Double annualizedStandardDeviation;
 
-	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate) {
-		this.ticker = ticker;
-		this.assetType = assetType;
-		this.strike = strike;
-		this.maturityDate = maturityDate;
-	}
+	// current price
+	private Double price;
 
 	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate, Double expectedReturn,
 			Double annualizedStandardDeviation) {
@@ -36,6 +32,17 @@ public class AssetEntity {
 		this.maturityDate = maturityDate;
 		this.expectedReturn = expectedReturn;
 		this.annualizedStandardDeviation = annualizedStandardDeviation;
+	}
+
+	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate, Double expectedReturn,
+			Double annualizedStandardDeviation, Double price) {
+		this.ticker = ticker;
+		this.assetType = assetType;
+		this.strike = strike;
+		this.maturityDate = maturityDate;
+		this.expectedReturn = expectedReturn;
+		this.annualizedStandardDeviation = annualizedStandardDeviation;
+		this.price = price;
 	}
 
 	public String getTicker() {
@@ -84,10 +91,18 @@ public class AssetEntity {
 	public void setAnnualizedStandardDeviation(Double annualizedStandardDeviation) {
 	}
 
+	public Double getPrice() {
+		return price;
+	}
+
+	public void setPrice(Double price) {
+		this.price = price;
+	}
+
 	@Override
 	public String toString() {
-		return "Asset{" + "ticker='" + ticker + '\'' + ", assetType=" + assetType + ", strike=" + strike
+		return "AssetEntity{" + "ticker='" + ticker + '\'' + ", assetType=" + assetType + ", strike=" + strike
 				+ ", maturityDate=" + maturityDate + ", expectedReturn=" + expectedReturn
-				+ ", annualizedStandardDeviation=" + annualizedStandardDeviation + '}';
+				+ ", annualizedStandardDeviation=" + annualizedStandardDeviation + ", price=" + price + '}';
 	}
 }

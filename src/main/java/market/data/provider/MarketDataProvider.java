@@ -6,19 +6,17 @@ import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import database.Database;
 import model.AssetEntity;
 import model.AssetType;
 import model.PriceChangeOuterClass;
 import model.Stock;
+import utils.Utils;
 
 public class MarketDataProvider {
 
 	public static final int CONSTANT_FACTOR = 7257600;
-
-	private static final Random random = new Random();
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	public static final double MIN_RANDOM_VALUE = 200d;
@@ -77,7 +75,7 @@ public class MarketDataProvider {
 		while (true) {
 			for (Stock stock : stocks) {
 				counter++;
-				double deltaTime = getRandomDouble(MIN_TIME_DELTA, MAX_TIME_DELTA) * 1000;
+				double deltaTime = Utils.getRandomDouble(MIN_TIME_DELTA, MAX_TIME_DELTA) * 1000;
 				// System.out.println("Time interval: " + deltaTime + "\n");
 
 				// Sleep for delta time
@@ -91,7 +89,7 @@ public class MarketDataProvider {
 
 				// Calculate Stock Movement
 				System.out.println("## " + counter + " Market Data Update");
-				double factor = brownianMotionFactor(deltaTime, stock.getExpectedReturn(),
+				double factor = getBrownianMotionFactor(deltaTime, stock.getExpectedReturn(),
 						stock.getAnnualizedStandardDeviation());
 				// System.out.println(stock.getTicker() + " factor: " + factor);
 				double newStockPrice = stock.getPrice() + stock.getPrice() * factor;
@@ -100,44 +98,38 @@ public class MarketDataProvider {
 				System.out.println(stock.getTicker() + " change to " + Math.ceil(stock.getPrice()) + "\n");
 
 				// Publish Price Change
-				PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.newBuilder()
-						.setTicker(stock.getTicker())
-						.setPrice(stock.getPrice())
-						.build();
-
-				try (Socket socket = new Socket("localhost", 5555);
-						ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
-					output.writeObject(priceChange.toByteArray());
-					System.out.println(
-							"Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()));
-				} catch (IOException e) {
-					System.err.println("Failed to publish price change: " + e.getMessage());
-				}
+				publishPriceChange(stock);
 
 			}
 		}
 	}
 
+	private static void publishPriceChange(Stock stock) {
+		PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.newBuilder()
+				.setTicker(stock.getTicker())
+				.setPrice(stock.getPrice())
+				.build();
+
+		try (Socket socket = new Socket("localhost", 3333);
+				ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
+			output.writeObject(priceChange.toByteArray());
+			System.out.println(
+					"Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()) + "\n");
+		} catch (IOException e) {
+			System.err.println("Failed to publish price change: " + e.getMessage());
+		}
+	}
+
 	private static Stock toStock(AssetEntity asset) {
-		// Random initial price
-		return new Stock(asset.getTicker(), getRandomDouble(MIN_RANDOM_VALUE, MAX_RANDOM_VALUE),
+		// Assign a random initial price
+		return new Stock(asset.getTicker(), Utils.getRandomDouble(MIN_RANDOM_VALUE, MAX_RANDOM_VALUE),
 				asset.getExpectedReturn(), asset.getAnnualizedStandardDeviation());
 	}
 
-	private static double brownianMotionFactor(double deltaTime, double expectedReturn,
+	private static double getBrownianMotionFactor(double deltaTime, double expectedReturn,
 			double annualizedStandardDeviation) {
 		return expectedReturn * (deltaTime / CONSTANT_FACTOR) + annualizedStandardDeviation
-				* getRandomVariableFromNormalDistribution() * Math.sqrt(deltaTime / CONSTANT_FACTOR);
+				* Utils.getRandomVariableFromNormalDistribution() * Math.sqrt(deltaTime / CONSTANT_FACTOR);
 	}
 
-	private static double getRandomVariableFromNormalDistribution() {
-		double r1 = random.nextDouble();
-		double r2 = random.nextDouble();
-		return Math.sqrt(-2.0 * Math.log(r1)) * Math.cos(2.0 * Math.PI * r2);
-	}
-
-	// Generate random int in [min, max)
-	private static double getRandomDouble(double min, double max) {
-		return min + (max - min) * random.nextDouble();
-	}
 }

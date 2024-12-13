@@ -23,6 +23,9 @@ public class CsvReader {
 	private static final String CALL_OPTION_STR = "C";
 	private static final String PUT_OPTION_TYPE = "P";
 
+	public static final double MIN_RANDOM_VALUE = 200d;
+	public static final double MAX_RANDOM_VALUE = 500d;
+
 	public Portfolio parseCSV(final File csvFile) throws IOException {
 		System.out.println("importing position file");
 		List<String> lines = Files.readLines(csvFile, Charsets.UTF_8);
@@ -102,9 +105,12 @@ public class CsvReader {
 				count++;
 				continue;
 			}
-			AssetEntity assetEntity = new AssetEntity(ticker, assetType, strike, maturityDate);
+			// Assign random expectedReturn, Annualized Standard Deviation, and
+			// Initial Price
+			AssetEntity assetEntity = new AssetEntity(ticker, assetType, strike, maturityDate,
+					Utils.getRandomDouble(0, 1), Utils.getRandomDouble(0, 1),
+					Utils.getRandomDouble(MIN_RANDOM_VALUE, MAX_RANDOM_VALUE));
 			Holding holding = new Holding(assetEntity, position);
-			holding.setTicker(assetEntity);
 			portfolio.addHolding(holding);
 			count++;
 		}

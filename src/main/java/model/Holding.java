@@ -1,30 +1,23 @@
 package model;
 
-public class Holding {
-	private AssetEntity ticker;
-	private Double position;
-	private Double price;
-	private Double value;
+import utils.Utils;
 
-	public Holding(AssetEntity ticker, Double position) {
-		this.ticker = ticker;
+public class Holding {
+	private final AssetEntity asset;
+	private final Double position;
+	private Double price;
+
+	public Holding(AssetEntity asset, Double position) {
+		this.asset = asset;
 		this.position = position;
 	}
 
-	public AssetEntity getTicker() {
-		return ticker;
-	}
-
-	public void setTicker(AssetEntity ticker) {
-		this.ticker = ticker;
+	public AssetEntity getAsset() {
+		return asset;
 	}
 
 	public Double getPosition() {
 		return position;
-	}
-
-	public void setPosition(Double position) {
-		this.position = position;
 	}
 
 	public Double getPrice() {
@@ -35,21 +28,19 @@ public class Holding {
 		this.price = price;
 	}
 
-	public Double getValue() {
-		// TODO the calculation
-		if (price == null) {
-			return null;
-		}
-		return value;
+	public void calculatePrice() {
+		this.price = Utils.calculateHoldingPrice(asset);
 	}
 
-	public void setValue(Double value) {
-		this.value = value;
+	public Double getValue() {
+		if (price == null || position == null) {
+			return 0d;
+		}
+		return price * position;
 	}
 
 	@Override
 	public String toString() {
-		return "Holding{" + "ticker=" + ticker + ", position=" + position + ", price=" + price + ", value=" + value
-				+ '}';
+		return "Holding{" + "ticker=" + asset + ", position=" + position + ", price=" + price + '}';
 	}
 }

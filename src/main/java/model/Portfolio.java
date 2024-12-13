@@ -10,14 +10,18 @@ public class Portfolio {
 		return holdings;
 	}
 
-	public void setHoldings(List<Holding> holdings) {
-		this.holdings = holdings;
-	}
-
 	public void addHolding(Holding holding) {
 		if (this.holdings == null) {
 			this.holdings = new ArrayList<>();
 		}
 		holdings.add(holding);
+	}
+
+	public double getNAV() {
+		double nav = 0;
+		for (Holding holding : holdings) {
+			nav += holding.getValue();
+		}
+		return nav;
 	}
 }

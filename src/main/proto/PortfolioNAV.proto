@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package model;
+
+message HoldingNAV{
+  string symbol = 1;
+  double price = 2;
+  double quantity = 3;
+  double value = 4;
+}
+
+message PortfolioNAV {
+  string priceChangeTicker = 1;
+  double priceChangeValue = 2;
+  repeated HoldingNAV holding = 3;
+  double value = 4;
+  int32 priceChangeCount = 5;
+}

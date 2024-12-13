@@ -67,8 +67,8 @@ public class Database {
 			if (assetEntity.getMaturityDate() != null) {
 				statement.setString(4, assetEntity.getMaturityDate().toString());
 			}
-			statement.setDouble(5, Math.random());
-			statement.setDouble(6, Math.random());
+			statement.setDouble(5, assetEntity.getExpectedReturn());
+			statement.setDouble(6, assetEntity.getAnnualizedStandardDeviation());
 			statement.execute();
 		}
 
