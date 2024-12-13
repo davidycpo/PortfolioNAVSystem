@@ -23,7 +23,7 @@ public class Database {
 	private void initializeDatabase() throws SQLException {
 		System.out.println("Initializing database...");
 		String createTableSQL = "CREATE TABLE IF NOT EXISTS assets " + "(ticker TEXT, " + "assetType TEXT NOT NULL, "
-				+ "strike REAL," + "maturityDate REAL, " + "PRIMARY KEY (ticker, assetType));";
+				+ "strike REAL," + "maturityDate TEXT, " + "PRIMARY KEY (ticker, assetType));";
 		try (Statement statement = connection.createStatement()) {
 			statement.execute(createTableSQL);
 		}
@@ -62,7 +62,7 @@ public class Database {
 				statement.setDouble(3, asset.getStrike());
 			}
 			if (asset.getMaturityDate() != null) {
-				statement.setDate(4, asset.getMaturityDate());
+				statement.setString(4, asset.getMaturityDate().toString());
 			}
 			statement.execute();
 		}
