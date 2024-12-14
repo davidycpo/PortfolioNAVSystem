@@ -14,17 +14,14 @@ import model.AssetEntity;
 import model.AssetType;
 import model.Holding;
 import model.Portfolio;
+import utils.Settings;
 import utils.Utils;
 
 public class CsvReader {
-
 	private static final String SYMBOL_SEPARATOR = "-";
 	private static final String CELL_SEPARATOR = ",";
 	private static final String CALL_OPTION_STR = "C";
 	private static final String PUT_OPTION_TYPE = "P";
-
-	public static final double MIN_RANDOM_VALUE = 200d;
-	public static final double MAX_RANDOM_VALUE = 500d;
 
 	public Portfolio parseCSV(final File csvFile) throws IOException {
 		System.out.println("importing position file");
@@ -109,7 +106,7 @@ public class CsvReader {
 			// Initial Price
 			AssetEntity assetEntity = new AssetEntity(ticker, assetType, strike, maturityDate,
 					Utils.getRandomDouble(0, 1), Utils.getRandomDouble(0, 1),
-					Utils.getRandomDouble(MIN_RANDOM_VALUE, MAX_RANDOM_VALUE));
+					Utils.getRandomDouble(Settings.MIN_RANDOM_VALUE, Settings.MAX_RANDOM_VALUE));
 			Holding holding = new Holding(assetEntity, position);
 			portfolio.addHolding(holding);
 			count++;

@@ -10,8 +10,8 @@ position.csv file.
 1. Read and Parse the position CSV file
 2. Persist the parsed Portfolio into DB (SQLite)
 3. Consume PriceChange from the MarketDataProvider
-4. Calculate PortfolioNAV based on the new price
-5. Publish PortfolioNAV to PortfolioResultListener
+4. Calculate PortfolioNavResult based on the new price
+5. Publish PortfolioNavResult to PortfolioResultListener
 
 ### MarketDataProvider
 
@@ -22,13 +22,13 @@ position.csv file.
 
 ### PortfolioResultListener
 
-1. Consume the PortfolioNAV from PortfolioNAVSystem
-2. Pretty print the PortfolioNAV
+1. Consume the PortfolioNavResult from PortfolioNAVSystem
+2. Pretty print the PortfolioNavResult
 
 ## How to build
 
 1. Generate Java Classes from Protobuf  
-   `protoc --java_out=src/main/java src/main/proto/PortfolioNAV.proto`
+   `protoc --java_out=src/main/java src/main/proto/PortfolioNavResult.proto`
 2. Gradle build  
    `./gradlew build`
 

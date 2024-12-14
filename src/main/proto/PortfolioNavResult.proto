@@ -9,7 +9,7 @@ message HoldingNAV{
   double value = 4;
 }
 
-message PortfolioNAV {
+message PortfolioNAVResult {
   string priceChangeTicker = 1;
   double priceChangeValue = 2;
   repeated HoldingNAV holding = 3;

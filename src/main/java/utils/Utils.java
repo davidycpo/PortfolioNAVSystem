@@ -11,13 +11,13 @@ import java.util.Random;
 
 import model.AssetEntity;
 import model.AssetType;
+import model.Stock;
 
 public class Utils {
-
 	private static final String MMM_YYYY_PATTERN = "MMM yyyy";
 	private static final String MMM_YYYY_WITH_SEPARATOR_PATTERN = "MMM-yyyy";
-	private static final double riskFreeInterestRate = 0.02;
 	private static final Random random = new Random();
+	private static final int CONSTANT_FACTOR = 7257600;
 
 	public static boolean isBlank(String str) {
 		return str == null || str.trim().isEmpty();
@@ -103,22 +103,35 @@ public class Utils {
 		double d2 = calculateD2Factor(d1, asset.getAnnualizedStandardDeviation(), timeToMaturity);
 		// In years
 		if (AssetType.CALL.equals(asset.getAssetType())) {
-			return (asset.getPrice() * Utils.getCumulativeProbability(d1)) - (asset.getStrike()
-					* Math.exp(-1 * riskFreeInterestRate * timeToMaturity) * Utils.getCumulativeProbability(d2));
+			return (asset.getPrice() * Utils.getCumulativeProbability(d1))
+					- (asset.getStrike() * Math.exp(-1 * Settings.riskFreeInterestRate * timeToMaturity)
+							* Utils.getCumulativeProbability(d2));
 
 		}
 		if (AssetType.PUT.equals(asset.getAssetType())) {
-			return (asset.getStrike() * Math.exp(-1 * riskFreeInterestRate * timeToMaturity)
+			return (asset.getStrike() * Math.exp(-1 * Settings.riskFreeInterestRate * timeToMaturity)
 					* Utils.getCumulativeProbability(-1 * d2))
 					- (asset.getPrice() * Utils.getCumulativeProbability(-1 * d1));
 		}
 		return 0d;
 	}
 
+	public static double getBrownianMotionFactor(double deltaTime, double expectedReturn,
+			double annualizedStandardDeviation) {
+		return expectedReturn * (deltaTime / CONSTANT_FACTOR) + annualizedStandardDeviation
+				* Utils.getRandomVariableFromNormalDistribution() * Math.sqrt(deltaTime / CONSTANT_FACTOR);
+	}
+
+	public static Stock toStock(AssetEntity asset, double minInitPrice, double maxInitPrice) {
+		// Assign a random initial price
+		return new Stock(asset.getTicker(), Utils.getRandomDouble(minInitPrice, maxInitPrice),
+				asset.getExpectedReturn(), asset.getAnnualizedStandardDeviation());
+	}
+
 	private static double calculateD1Factor(double stockPrice, double strikePrice, double annualizedStandardDeviation,
 			double timeToMaturity) {
 		double top = Math.log(stockPrice / strikePrice)
-				+ ((riskFreeInterestRate + (annualizedStandardDeviation * annualizedStandardDeviation) / 2)
+				+ ((Settings.riskFreeInterestRate + (annualizedStandardDeviation * annualizedStandardDeviation) / 2)
 						* timeToMaturity);
 		double bottom = annualizedStandardDeviation * Math.sqrt(timeToMaturity);
 		return top / bottom;
