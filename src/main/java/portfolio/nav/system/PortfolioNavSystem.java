@@ -8,8 +8,8 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 
 import database.Database;
 import model.AssetEntity;
@@ -24,8 +24,10 @@ public class PortfolioNavSystem {
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	private static final String POSITION_CSV_PATH = "src/main/resources/position.csv";
-	private static final int BUFFER_SIZE = 512;
+	private static final int BUFFER_SIZE = 18;
 	private static final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+	private static final byte[] symbolBytes = new byte[6];
+	private static final DecimalFormat df = new DecimalFormat("#,##0.00");
 
 	public static void main(String[] args) {
 		File positionFile = new File(POSITION_CSV_PATH);
@@ -35,8 +37,11 @@ public class PortfolioNavSystem {
 
 		persistPortfolio(portfolio);
 
-		// Initial Price calculation - based on random start of the day price
-		// This is required for
+		/*
+		 * Initial Price calculation - based on random start of the day price
+		 * This is required for initial PortfolioNAV result when new price
+		 * change is not yet available for all stocks
+		 */
 		for (Holding holding : portfolio.getHoldings()) {
 			holding.calculatePrice();
 		}
@@ -46,20 +51,17 @@ public class PortfolioNavSystem {
 
 			// Price Change Listener
 			try (SocketChannel socketChannel = serverSocketChannel.accept()) {
-
 				int priceChangeCount = 1;
 				while (true) {
 					buffer.clear();
-					int bytesRead = socketChannel.read(buffer);
-					byte[] data = new byte[bytesRead];
-					buffer.get(data);
-					String message = new String(buffer.array(), 0, bytesRead, StandardCharsets.UTF_8);
-					String[] splits = message.split(" ");
+					socketChannel.read(buffer);
+					buffer.flip();
+					int symbolLength = buffer.getInt();
+					buffer.get(symbolBytes, 0, symbolLength);
+					double price = buffer.getDouble();
+					String symbol = new String(symbolBytes, 0, symbolLength);
 
-					String symbol = splits[0];
-					double price = Double.parseDouble(splits[1]);
-
-					System.out.println("Received Price Change, Ticker: " + symbol + ", Price: " + Math.ceil(price));
+					System.out.println("Received Price Change, Ticker: " + symbol + ", Price: " + df.format(price));
 
 					// Update Price in Holding
 					for (Holding holding : portfolio.getHoldings()) {

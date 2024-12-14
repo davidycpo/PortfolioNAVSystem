@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ import utils.Utils;
 public class MarketDataProvider {
 
 	public static final int CONSTANT_FACTOR = 7257600;
-	private static final int BUFFER_SIZE = 512;
+	private static final int BUFFER_SIZE = 18;
 	private static final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 	private static final DecimalFormat df = new DecimalFormat("#,##0.00");
 
@@ -112,12 +111,14 @@ public class MarketDataProvider {
 	}
 
 	private static void publishPriceChange(Stock stock, SocketChannel channel) throws IOException {
-		String message = stock.getTicker() + " " + stock.getPrice() + "\n";
 		buffer.clear();
-		buffer.put(message.getBytes(StandardCharsets.UTF_8));
+		byte[] tickerBytes = stock.getTicker().getBytes();
+		buffer.putInt(tickerBytes.length);
+		buffer.put(tickerBytes);
+		buffer.putDouble(stock.getPrice());
 		buffer.flip();
 		channel.write(buffer);
-		System.out.println("Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()) + "\n");
+		System.out.println("Published: Ticker: " + stock.getTicker() + " Price: " + df.format(stock.getPrice()) + "\n");
 
 	}
 
