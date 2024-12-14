@@ -2,10 +2,13 @@ package portfolio.nav.system;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
 import database.Database;
@@ -14,7 +17,6 @@ import model.AssetType;
 import model.Holding;
 import model.Portfolio;
 import model.PortfolioNAVOuterClass;
-import model.PriceChangeOuterClass;
 import service.CsvReader;
 import utils.Utils;
 
@@ -22,6 +24,8 @@ public class PortfolioNavSystem {
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	private static final String POSITION_CSV_PATH = "src/main/resources/position.csv";
+	private static final int BUFFER_SIZE = 512;
+	private static final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 
 	public static void main(String[] args) {
 		File positionFile = new File(POSITION_CSV_PATH);
@@ -32,36 +36,43 @@ public class PortfolioNavSystem {
 		persistPortfolio(portfolio);
 
 		// Initial Price calculation - based on random start of the day price
+		// This is required for
 		for (Holding holding : portfolio.getHoldings()) {
 			holding.calculatePrice();
 		}
 
-		// Price Change Listener
-		try (ServerSocket serverSocket = new ServerSocket(3333)) {
-			int priceChangeCount = 0;
-			while (true) {
-				try (Socket socket = serverSocket.accept();
-						ObjectInputStream input = new ObjectInputStream(socket.getInputStream())) {
-					byte[] data = (byte[]) input.readObject();
-					PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.parseFrom(data);
-					System.out.println("Received Price Change, Ticker: " + priceChange.getTicker() + ", Price: "
-							+ Math.ceil(priceChange.getPrice()));
+		try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
+			serverSocketChannel.bind(new InetSocketAddress(3333));
+
+			// Price Change Listener
+			try (SocketChannel socketChannel = serverSocketChannel.accept()) {
+
+				int priceChangeCount = 1;
+				while (true) {
+					buffer.clear();
+					int bytesRead = socketChannel.read(buffer);
+					byte[] data = new byte[bytesRead];
+					buffer.get(data);
+					String message = new String(buffer.array(), 0, bytesRead, StandardCharsets.UTF_8);
+					String[] splits = message.split(" ");
+
+					String symbol = splits[0];
+					double price = Double.parseDouble(splits[1]);
+
+					System.out.println("Received Price Change, Ticker: " + symbol + ", Price: " + Math.ceil(price));
 
 					// Update Price in Holding
 					for (Holding holding : portfolio.getHoldings()) {
-						if (priceChange.getTicker().equals(holding.getAsset().getTicker())) {
-							holding.getAsset().setPrice(priceChange.getPrice());
+						if (symbol.equals(holding.getAsset().getTicker())) {
+							holding.getAsset().setPrice(price);
 							holding.calculatePrice();
 						}
 					}
 
 					// Publish
-					publishPortfolioNAV(portfolio, priceChange, priceChangeCount);
-
+					publishPortfolioNAV(portfolio, symbol, price, priceChangeCount);
 					priceChangeCount++;
 
-				} catch (ClassNotFoundException e) {
-					System.err.println("Failed to parse priceChange, error: " + e.getMessage());
 				}
 			}
 		} catch (IOException e) {
@@ -114,12 +125,12 @@ public class PortfolioNavSystem {
 		return portfolio;
 	}
 
-	private static void publishPortfolioNAV(final Portfolio portfolio,
-			final PriceChangeOuterClass.PriceChange priceChange, final int priceChangeCount) {
+	private static void publishPortfolioNAV(final Portfolio portfolio, final String ticker, final double priceChange,
+			final int priceChangeCount) {
 		PortfolioNAVOuterClass.PortfolioNAV.Builder portfolioNavBuilder = PortfolioNAVOuterClass.PortfolioNAV
 				.newBuilder()
-				.setPriceChangeTicker(priceChange.getTicker())
-				.setPriceChangeValue(priceChange.getPrice())
+				.setPriceChangeTicker(ticker)
+				.setPriceChangeValue(priceChange)
 				.setValue(portfolio.getNAV())
 				.setPriceChangeCount(priceChangeCount);
 

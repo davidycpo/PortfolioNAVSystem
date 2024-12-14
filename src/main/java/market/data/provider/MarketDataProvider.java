@@ -1,30 +1,33 @@
 package market.data.provider;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import database.Database;
 import model.AssetEntity;
 import model.AssetType;
-import model.PriceChangeOuterClass;
 import model.Stock;
 import utils.Utils;
 
 public class MarketDataProvider {
 
 	public static final int CONSTANT_FACTOR = 7257600;
+	private static final int BUFFER_SIZE = 512;
+	private static final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+	private static final DecimalFormat df = new DecimalFormat("#,##0.00");
 
 	private static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	public static final double MIN_RANDOM_VALUE = 200d;
 	public static final double MAX_RANDOM_VALUE = 500d;
 	public static final double MIN_TIME_DELTA = 0.5;
 	public static final double MAX_TIME_DELTA = 2;
-	private static final Random random = new Random();
 
 	public static void main(String[] args) {
 		// Get Stock from DB
@@ -68,61 +71,54 @@ public class MarketDataProvider {
 
 	private static void publishStockMovement(List<Stock> stocks) {
 		int counter = 1;
-		System.out.println("## " + counter + " Market Data Update");
-		for (Stock stock : stocks) {
-			System.out.println(stock.getTicker() + " change to " + Math.ceil(stock.getPrice()));
-		}
-		System.out.println();
+		try (SocketChannel socketChannel = SocketChannel.open()) {
+			socketChannel.connect(new InetSocketAddress("localhost", 3333));
+			while (true) {
+				double deltaTime = Utils.getRandomDouble(MIN_TIME_DELTA, MAX_TIME_DELTA) * 1000;
+				// System.out.println("Time interval: " + deltaTime + "\n");
 
-		while (true) {
-			counter++;
-			double deltaTime = Utils.getRandomDouble(MIN_TIME_DELTA, MAX_TIME_DELTA) * 1000;
-			// System.out.println("Time interval: " + deltaTime + "\n");
+				// Sleep for delta time
+				try {
+					Thread.sleep((long) deltaTime);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					System.err.println("Thread was interrupted");
+					break;
+				}
 
-			// Sleep for delta time
-			try {
-				Thread.sleep((long) deltaTime);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				System.err.println("Thread was interrupted");
-				break;
+				// Pick A Random Stock
+				int randomIndex = (int) (Math.random() * stocks.size());
+				Stock stock = stocks.get(randomIndex);
+
+				// Calculate Stock Movement
+				System.out.println("## " + counter + " Market Data Update");
+				double factor = getBrownianMotionFactor(deltaTime, stock.getExpectedReturn(),
+						stock.getAnnualizedStandardDeviation());
+				// System.out.println(stock.getTicker() + " factor: " +
+				// factor);
+				double newStockPrice = stock.getPrice() + stock.getPrice() * factor;
+				stock.setPrice(newStockPrice);
+
+				System.out.println(stock.getTicker() + " change to " + df.format(stock.getPrice()) + "\n");
+
+				// Publish Price Change
+				publishPriceChange(stock, socketChannel);
+				counter++;
 			}
-
-			// Pick A Random Stock
-			int randomIndex = (int) (Math.random() * stocks.size());
-			Stock stock = stocks.get(randomIndex);
-
-			// Calculate Stock Movement
-			System.out.println("## " + counter + " Market Data Update");
-			double factor = getBrownianMotionFactor(deltaTime, stock.getExpectedReturn(),
-					stock.getAnnualizedStandardDeviation());
-			// System.out.println(stock.getTicker() + " factor: " + factor);
-			double newStockPrice = stock.getPrice() + stock.getPrice() * factor;
-			stock.setPrice(newStockPrice);
-
-			System.out.println(stock.getTicker() + " change to " + Math.ceil(stock.getPrice()) + "\n");
-
-			// Publish Price Change
-			publishPriceChange(stock);
-
+		} catch (IOException e) {
+			System.err.println("Failed to publish price change: " + e.getMessage());
 		}
 
 	}
 
-	private static void publishPriceChange(Stock stock) {
-		PriceChangeOuterClass.PriceChange priceChange = PriceChangeOuterClass.PriceChange.newBuilder()
-				.setTicker(stock.getTicker())
-				.setPrice(stock.getPrice())
-				.build();
+	private static void publishPriceChange(Stock stock, SocketChannel channel) throws IOException {
+		String message = stock.getTicker() + " " + stock.getPrice() + "\n";
+		buffer.clear();
+		buffer.put(message.getBytes(StandardCharsets.UTF_8));
+		buffer.flip();
+		channel.write(buffer);
+		System.out.println("Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()) + "\n");
 
-		try (Socket socket = new Socket("localhost", 3333);
-				ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
-			output.writeObject(priceChange.toByteArray());
-			System.out.println(
-					"Published: Ticker: " + stock.getTicker() + " Price: " + Math.ceil(stock.getPrice()) + "\n");
-		} catch (IOException e) {
-			System.err.println("Failed to publish price change: " + e.getMessage());
-		}
 	}
 
 	private static Stock toStock(AssetEntity asset) {
