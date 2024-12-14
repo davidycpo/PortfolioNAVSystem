@@ -1,0 +1,19 @@
+@startuml
+
+title System Diagram
+hide footbox
+
+participant PortfolioNavSystem
+participant MarketDataProvider
+participant PortfolioResultListener
+participant SQLite
+
+rnote over PortfolioNavSystem:parsePortfolioFromCSV
+PortfolioNavSystem->SQLite:persistPortfolio
+MarketDataProvider<-SQLite:getStocks
+PortfolioNavSystem<-MarketDataProvider:publishPriceChange
+rnote over PortfolioNavSystem:calculatePortfolioValue
+PortfolioNavSystem->PortfolioResultListener:publishPortfolioNAV
+rnote over PortfolioResultListener:prettyPrintPortfolioNAV
+
+@enduml
