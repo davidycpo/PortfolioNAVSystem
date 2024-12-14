@@ -10,22 +10,22 @@ public class AssetEntity {
 	private AssetType assetType;
 
 	// the strike price, only available for option
-	private Double strike;
+	private double strike;
 
 	// maturity date of the option, only available for option
 	private Date maturityDate;
 
 	// expected return, a unique number between 0-1
-	private final Double expectedReturn;
+	private final double expectedReturn;
 
 	// annualized standard
-	private final Double annualizedStandardDeviation;
+	private final double annualizedStandardDeviation;
 
 	// current price
-	private Double price;
+	private double price;
 
-	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate, Double expectedReturn,
-			Double annualizedStandardDeviation) {
+	public AssetEntity(String ticker, AssetType assetType, double strike, Date maturityDate, double expectedReturn,
+			double annualizedStandardDeviation) {
 		this.ticker = ticker;
 		this.assetType = assetType;
 		this.strike = strike;
@@ -34,8 +34,8 @@ public class AssetEntity {
 		this.annualizedStandardDeviation = annualizedStandardDeviation;
 	}
 
-	public AssetEntity(String ticker, AssetType assetType, Double strike, Date maturityDate, Double expectedReturn,
-			Double annualizedStandardDeviation, Double price) {
+	public AssetEntity(String ticker, AssetType assetType, double strike, Date maturityDate, double expectedReturn,
+			double annualizedStandardDeviation, double price) {
 		this.ticker = ticker;
 		this.assetType = assetType;
 		this.strike = strike;
@@ -61,11 +61,11 @@ public class AssetEntity {
 		this.assetType = assetType;
 	}
 
-	public Double getStrike() {
+	public double getStrike() {
 		return strike;
 	}
 
-	public void setStrike(Double strike) {
+	public void setStrike(double strike) {
 		this.strike = strike;
 	}
 
@@ -77,25 +77,25 @@ public class AssetEntity {
 		this.maturityDate = maturityDate;
 	}
 
-	public Double getExpectedReturn() {
+	public double getExpectedReturn() {
 		return expectedReturn;
 	}
 
-	public void setExpectedReturn(Double expectedReturn) {
+	public void setExpectedReturn(double expectedReturn) {
 	}
 
-	public Double getAnnualizedStandardDeviation() {
+	public double getAnnualizedStandardDeviation() {
 		return annualizedStandardDeviation;
 	}
 
-	public void setAnnualizedStandardDeviation(Double annualizedStandardDeviation) {
+	public void setAnnualizedStandardDeviation(double annualizedStandardDeviation) {
 	}
 
-	public Double getPrice() {
+	public double getPrice() {
 		return price;
 	}
 
-	public void setPrice(Double price) {
+	public void setPrice(double price) {
 		this.price = price;
 	}
 

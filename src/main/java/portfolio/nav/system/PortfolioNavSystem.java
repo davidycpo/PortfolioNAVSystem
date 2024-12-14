@@ -29,11 +29,12 @@ public class PortfolioNavSystem {
 		if (portfolio == null)
 			return;
 
+		persistPortfolio(portfolio);
+
+		// Initial Price calculation - based on random start of the day price
 		for (Holding holding : portfolio.getHoldings()) {
 			holding.calculatePrice();
 		}
-
-		persistPortfolio(portfolio);
 
 		// Price Change Listener
 		try (ServerSocket serverSocket = new ServerSocket(3333)) {
@@ -130,7 +131,7 @@ public class PortfolioNavSystem {
 			} else {
 				String optionSymbol = AssetType.PUT.equals(asset.getAssetType()) ? "P" : "C";
 				symbol = asset.getTicker() + "-" + Utils.parseString(asset.getMaturityDate()) + "-"
-						+ asset.getStrike().intValue() + "-" + optionSymbol;
+						+ (int) asset.getStrike() + "-" + optionSymbol;
 			}
 
 			PortfolioNAVOuterClass.HoldingNAV holdingNAV = PortfolioNAVOuterClass.HoldingNAV.newBuilder()

@@ -49,7 +49,7 @@ public class Database {
 		}
 
 		if (assetEntity.getAssetType() == AssetType.CALL || assetEntity.getAssetType() == AssetType.PUT) {
-			if (assetEntity.getStrike() == null) {
+			if (assetEntity.getStrike() == 0d) {
 				throw new IllegalArgumentException("Strike is required");
 			}
 			if (assetEntity.getMaturityDate() == null) {
@@ -61,7 +61,7 @@ public class Database {
 		try (PreparedStatement statement = connection.prepareStatement(insertSQL)) {
 			statement.setString(1, assetEntity.getTicker());
 			statement.setString(2, assetEntity.getAssetType().toString());
-			if (assetEntity.getStrike() != null) {
+			if (assetEntity.getStrike() != 0d) {
 				statement.setDouble(3, assetEntity.getStrike());
 			}
 			if (assetEntity.getMaturityDate() != null) {
@@ -91,15 +91,15 @@ public class Database {
 			if (result.next()) {
 				String tickerDB = result.getString(1);
 				AssetType assetType = AssetType.valueOf(result.getString(2));
-				Double strike = result.getDouble(3);
+				double strike = result.getDouble(3);
 
 				String dateStr = result.getString(4);
 				Date maturityDate = null;
 				if (dateStr != null) {
 					maturityDate = Date.valueOf(result.getString(4));
 				}
-				Double expectedReturn = result.getDouble(5);
-				Double annualizedStandardDeviation = result.getDouble(6);
+				double expectedReturn = result.getDouble(5);
+				double annualizedStandardDeviation = result.getDouble(6);
 				return new AssetEntity(tickerDB, assetType, strike, maturityDate, expectedReturn,
 						annualizedStandardDeviation);
 			}
@@ -118,10 +118,10 @@ public class Database {
 			while (result.next()) {
 				String tickerDB = result.getString(1);
 				AssetType assetType = AssetType.valueOf(result.getString(2));
-				Double strike = result.getDouble(3);
+				double strike = result.getDouble(3);
 				Date maturityDate = result.getDate(4);
-				Double expectedReturn = result.getDouble(5);
-				Double annualizedStandardDeviation = result.getDouble(6);
+				double expectedReturn = result.getDouble(5);
+				double annualizedStandardDeviation = result.getDouble(6);
 				assetEntities.add(new AssetEntity(tickerDB, assetType, strike, maturityDate, expectedReturn,
 						annualizedStandardDeviation));
 			}

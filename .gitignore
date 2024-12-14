@@ -44,3 +44,4 @@ default_preference.epf
 /.idea/eclipseCodeFormatter.xml
 /src/main/resources/assetEntity.sqlite
 /src/main/resources/asset.sqlite
+/.idea/csv-editor.xml

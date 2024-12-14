@@ -4,10 +4,10 @@ import utils.Utils;
 
 public class Holding {
 	private final AssetEntity asset;
-	private final Double position;
-	private Double price;
+	private final double position;
+	private double price;
 
-	public Holding(AssetEntity asset, Double position) {
+	public Holding(AssetEntity asset, double position) {
 		this.asset = asset;
 		this.position = position;
 	}
@@ -16,15 +16,15 @@ public class Holding {
 		return asset;
 	}
 
-	public Double getPosition() {
+	public double getPosition() {
 		return position;
 	}
 
-	public Double getPrice() {
+	public double getPrice() {
 		return price;
 	}
 
-	public void setPrice(Double price) {
+	public void setPrice(double price) {
 		this.price = price;
 	}
 
@@ -32,8 +32,8 @@ public class Holding {
 		this.price = Utils.calculateHoldingPrice(asset);
 	}
 
-	public Double getValue() {
-		if (price == null || position == null) {
+	public double getValue() {
+		if (price == 0d || position == 0d) {
 			return 0d;
 		}
 		return price * position;

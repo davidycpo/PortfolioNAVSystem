@@ -90,7 +90,7 @@ public class Utils {
 	 * current price, assume a constant riskFreeInterestRate
 	 */
 	public static double calculateHoldingPrice(AssetEntity asset) {
-		if (asset == null || asset.getPrice() == null) {
+		if (asset == null || asset.getPrice() == 0d) {
 			return 0d;
 		}
 		if (AssetType.STOCK.equals(asset.getAssetType())) {

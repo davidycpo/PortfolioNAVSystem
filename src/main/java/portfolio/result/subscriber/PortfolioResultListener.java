@@ -44,7 +44,7 @@ public class PortfolioResultListener {
 					// Print Headers
 					System.out.println("## " + portfolioNAV.getPriceChangeCount() + " Market Data Update");
 					System.out.println(portfolioNAV.getPriceChangeTicker() + " change to "
-							+ Math.ceil(portfolioNAV.getPriceChangeValue()) + "\n");
+							+ df.format(portfolioNAV.getPriceChangeValue()) + "\n");
 					System.out.println("## Portfolio");
 
 					for (Map.Entry<String, Integer> entry : HEADERS_SPACING_MAP.entrySet()) {

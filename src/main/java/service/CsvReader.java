@@ -47,7 +47,7 @@ public class CsvReader {
 			String ticker;
 			AssetType assetType;
 			Date maturityDate = null;
-			Double strike = null;
+			double strike = 0d;
 			double position;
 			if (symbol.contains(SYMBOL_SEPARATOR)) {
 				// An Option
@@ -74,7 +74,7 @@ public class CsvReader {
 				}
 
 				try {
-					strike = Double.valueOf(strikeStr);
+					strike = Double.parseDouble(strikeStr);
 				} catch (NumberFormatException e) {
 					System.err.println("Invalid strike: " + strikeStr + " line #" + count);
 					count++;

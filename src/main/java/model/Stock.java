@@ -6,15 +6,15 @@ public class Stock {
 	private final String ticker;
 
 	// the current price of the stock, can never be zero
-	private Double price;
+	private double price;
 
 	// expected return, a unique number between 0-1
-	private final Double expectedReturn;
+	private final double expectedReturn;
 
 	// annualized standard deviation, a unique number between 0-1
-	private final Double annualizedStandardDeviation;
+	private final double annualizedStandardDeviation;
 
-	public Stock(String ticker, Double price, Double expectedReturn, Double annualizedStandardDeviation) {
+	public Stock(String ticker, double price, double expectedReturn, double annualizedStandardDeviation) {
 		this.ticker = ticker;
 		this.price = price;
 		this.expectedReturn = expectedReturn;
@@ -25,19 +25,19 @@ public class Stock {
 		return ticker;
 	}
 
-	public Double getPrice() {
+	public double getPrice() {
 		return price;
 	}
 
-	public void setPrice(Double price) {
+	public void setPrice(double price) {
 		this.price = price;
 	}
 
-	public Double getExpectedReturn() {
+	public double getExpectedReturn() {
 		return expectedReturn;
 	}
 
-	public Double getAnnualizedStandardDeviation() {
+	public double getAnnualizedStandardDeviation() {
 		return annualizedStandardDeviation;
 	}
 
