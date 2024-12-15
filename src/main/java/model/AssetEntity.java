@@ -6,6 +6,9 @@ public class AssetEntity {
 	// Identifier of the asset, usually symbol
 	private String ticker;
 
+	// Display name of the asset
+	private String displayName;
+
 	// Type of the asset
 	private AssetType assetType;
 
@@ -34,9 +37,10 @@ public class AssetEntity {
 		this.annualizedStandardDeviation = annualizedStandardDeviation;
 	}
 
-	public AssetEntity(String ticker, AssetType assetType, double strike, Date maturityDate, double expectedReturn,
-			double annualizedStandardDeviation, double price) {
+	public AssetEntity(String ticker, String displayName, AssetType assetType, double strike, Date maturityDate,
+			double expectedReturn, double annualizedStandardDeviation, double price) {
 		this.ticker = ticker;
+		this.displayName = displayName;
 		this.assetType = assetType;
 		this.strike = strike;
 		this.maturityDate = maturityDate;
@@ -51,6 +55,14 @@ public class AssetEntity {
 
 	public void setTicker(String ticker) {
 		this.ticker = ticker;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 
 	public AssetType getAssetType() {
@@ -101,8 +113,9 @@ public class AssetEntity {
 
 	@Override
 	public String toString() {
-		return "AssetEntity{" + "ticker='" + ticker + '\'' + ", assetType=" + assetType + ", strike=" + strike
-				+ ", maturityDate=" + maturityDate + ", expectedReturn=" + expectedReturn
-				+ ", annualizedStandardDeviation=" + annualizedStandardDeviation + ", price=" + price + '}';
+		return "AssetEntity{" + "ticker='" + ticker + '\'' + ", displayName='" + displayName + '\'' + ", assetType="
+				+ assetType + ", strike=" + strike + ", maturityDate=" + maturityDate + ", expectedReturn="
+				+ expectedReturn + ", annualizedStandardDeviation=" + annualizedStandardDeviation + ", price=" + price
+				+ '}';
 	}
 }

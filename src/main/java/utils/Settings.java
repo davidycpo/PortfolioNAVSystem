@@ -7,7 +7,7 @@ public class Settings {
 	public static final int PORTFOLIO_NAV_RESULT_PORT = 4444;
 
 	// Quant related
-	static final double riskFreeInterestRate = 0.02;
+	public static final double riskFreeInterestRate = 0.02;
 
 	// Market Data Simulation
 	public static final double MIN_TIME_DELTA = 0.5;
@@ -19,6 +19,7 @@ public class Settings {
 	public static final int PRICE_CHANGE_BUFFER_SIZE = 18;
 	public static final int PORTFOLIO_NAV_LENGTH_BUFFER_SIZE = 4;
 	public static final int PORTFOLIO_NAV_RESULT_BUFFER_SIZE = 512;
+	public static final int SYMBOL_BYTE_SIZE = 6;
 
 	// DB
 	public static final String DB_PATH = "jdbc:sqlite:src/main/resources/asset.sqlite";

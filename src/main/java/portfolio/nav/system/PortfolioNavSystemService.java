@@ -11,12 +11,10 @@ import java.text.DecimalFormat;
 
 import database.Database;
 import model.AssetEntity;
-import model.AssetType;
 import model.Holding;
 import model.Portfolio;
 import model.PortfolioNavResult;
 import utils.Settings;
-import utils.Utils;
 
 public class PortfolioNavSystemService {
 	private static final ByteBuffer PRICE_CHANGE_BUFFER = ByteBuffer.allocate(Settings.PRICE_CHANGE_BUFFER_SIZE);
@@ -24,9 +22,10 @@ public class PortfolioNavSystemService {
 			.allocate(Settings.PORTFOLIO_NAV_LENGTH_BUFFER_SIZE);
 	private static final ByteBuffer PORTFOLIO_NAV_RESULT_BUFFER = ByteBuffer
 			.allocate(Settings.PORTFOLIO_NAV_RESULT_BUFFER_SIZE);
-	private static final byte[] SYMBOL_BYTES = new byte[6];
+	private static final byte[] SYMBOL_BYTES = new byte[Settings.SYMBOL_BYTE_SIZE];
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
 
+	/* Recalculate portfolio NAV based price change and publish NAV result */
 	public void handlePriceChange(Portfolio portfolio) {
 		try (ServerSocketChannel priceChangeServerSocketChannel = ServerSocketChannel.open()) {
 			priceChangeServerSocketChannel.bind(new InetSocketAddress(Settings.PRICE_CHANGE_PORT));
@@ -90,8 +89,10 @@ public class PortfolioNavSystemService {
 				+ DECIMAL_FORMAT.format(price));
 	}
 
-	// Calculate the Price of each holding by the underlying asset, primarily
-	// used in initialization
+	/*
+	 * Calculate the Price of each holding by the underlying asset, primarily
+	 * used in initialization
+	 */
 	public void calculatePortfolioNAV(Portfolio portfolio) {
 		for (Holding holding : portfolio.getHoldings()) {
 			holding.calculatePrice();
@@ -169,17 +170,9 @@ public class PortfolioNavSystemService {
 
 		for (Holding holding : portfolio.getHoldings()) {
 			AssetEntity asset = holding.getAsset();
-			String symbol;
-			if (AssetType.STOCK.equals(asset.getAssetType())) {
-				symbol = asset.getTicker();
-			} else {
-				String optionSymbol = AssetType.PUT.equals(asset.getAssetType()) ? "P" : "C";
-				symbol = asset.getTicker() + "-" + Utils.parseString(asset.getMaturityDate()) + "-"
-						+ (int) asset.getStrike() + "-" + optionSymbol;
-			}
 
 			PortfolioNavResult.HoldingNAV holdingNAV = PortfolioNavResult.HoldingNAV.newBuilder()
-					.setSymbol(symbol)
+					.setSymbol(asset.getDisplayName())
 					.setPrice(holding.getPrice())
 					.setQuantity(holding.getPosition())
 					.setValue(holding.getValue())

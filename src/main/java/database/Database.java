@@ -102,8 +102,6 @@ public class Database {
 				return new AssetEntity(tickerDB, assetType, strike, maturityDate, expectedReturn,
 						annualizedStandardDeviation);
 			}
-			// System.err.println("Asset not found with ticker: " + ticker + "
-			// and assetType: " + type);
 			return null;
 		}
 	}

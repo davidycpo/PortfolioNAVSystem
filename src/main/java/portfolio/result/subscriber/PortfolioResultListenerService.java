@@ -22,6 +22,10 @@ public class PortfolioResultListenerService {
 	private static final String TOTAL_PORTFOLIO_STR = "#Total Portfolio";
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
 	private static final StringBuilder STRING_BUILDER = new StringBuilder();
+	private static final ByteBuffer PORTFOLIO_NAV_RESULT_BUFFER = ByteBuffer
+			.allocate(Settings.PORTFOLIO_NAV_RESULT_BUFFER_SIZE);
+	private static final ByteBuffer PORTFOLIO_NAV_LENGTH_BUFFER = ByteBuffer
+			.allocate(Settings.PORTFOLIO_NAV_LENGTH_BUFFER_SIZE);
 
 	static {
 		Map<String, Integer> tmp = new HashMap<>();
@@ -42,19 +46,22 @@ public class PortfolioResultListenerService {
 			try (SocketChannel socketChannel = serverSocketChannel.accept()) {
 
 				while (true) {
-					ByteBuffer lengthBuffer = ByteBuffer.allocate(4);
-					socketChannel.read(lengthBuffer);
-					lengthBuffer.flip();
-					int messageLength = lengthBuffer.getInt();
+					// Read the result length
+					PORTFOLIO_NAV_LENGTH_BUFFER.clear();
+					socketChannel.read(PORTFOLIO_NAV_LENGTH_BUFFER);
+					PORTFOLIO_NAV_LENGTH_BUFFER.flip();
+					int resultLength = PORTFOLIO_NAV_LENGTH_BUFFER.getInt();
 
-					// Read the actual message
-					ByteBuffer messageBuffer = ByteBuffer.allocate(messageLength);
-					socketChannel.read(messageBuffer);
-					messageBuffer.flip();
+					// Parse the PortfolioNAVResult
+					PORTFOLIO_NAV_RESULT_BUFFER.clear();
+					socketChannel.read(PORTFOLIO_NAV_RESULT_BUFFER);
+					PORTFOLIO_NAV_RESULT_BUFFER.flip();
+
+					byte[] resultBytes = new byte[resultLength];
+					PORTFOLIO_NAV_RESULT_BUFFER.get(resultBytes);
 
 					PortfolioNavResult.PortfolioNAVResult portfolioNAV = PortfolioNavResult.PortfolioNAVResult
-							.parseFrom(messageBuffer.array());
-
+							.parseFrom(resultBytes);
 					// Print Headers
 					System.out.println("## " + portfolioNAV.getPriceChangeCount() + " Market Data Update");
 					System.out.println(portfolioNAV.getPriceChangeTicker() + " change to "

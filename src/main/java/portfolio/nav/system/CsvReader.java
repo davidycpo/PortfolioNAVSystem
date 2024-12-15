@@ -105,7 +105,7 @@ public class CsvReader {
 			}
 			// Assign random expectedReturn, Annualized Standard Deviation, and
 			// Initial Price
-			AssetEntity assetEntity = new AssetEntity(ticker, assetType, strike, maturityDate,
+			AssetEntity assetEntity = new AssetEntity(ticker, symbol, assetType, strike, maturityDate,
 					Utils.getRandomDouble(0, 1), Utils.getRandomDouble(0, 1),
 					Utils.getRandomDouble(Settings.MIN_RANDOM_VALUE, Settings.MAX_RANDOM_VALUE));
 			Holding holding = new Holding(assetEntity, position);
