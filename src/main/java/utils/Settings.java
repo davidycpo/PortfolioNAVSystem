@@ -4,7 +4,7 @@ public class Settings {
 	// Connection
 	public static final String HOSTNAME = "localhost";
 	public static final int PRICE_CHANGE_PORT = 3333;
-	public static final int PORTFOLIO_NAV_PORT = 4444;
+	public static final int PORTFOLIO_NAV_RESULT_PORT = 4444;
 
 	// Quant related
 	static final double riskFreeInterestRate = 0.02;
@@ -16,7 +16,9 @@ public class Settings {
 	public static final double MAX_RANDOM_VALUE = 500d;
 
 	// Buffer
-	public static final int BUFFER_SIZE = 18;
+	public static final int PRICE_CHANGE_BUFFER_SIZE = 18;
+	public static final int PORTFOLIO_NAV_LENGTH_BUFFER_SIZE = 4;
+	public static final int PORTFOLIO_NAV_RESULT_BUFFER_SIZE = 512;
 
 	// DB
 	public static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";

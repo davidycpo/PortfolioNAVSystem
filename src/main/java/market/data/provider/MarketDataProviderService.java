@@ -17,8 +17,8 @@ import utils.Settings;
 import utils.Utils;
 
 public class MarketDataProviderService {
-	private static final ByteBuffer buffer = ByteBuffer.allocate(Settings.BUFFER_SIZE);
-	private static final DecimalFormat df = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
+	private static final ByteBuffer BUFFER = ByteBuffer.allocate(Settings.PRICE_CHANGE_BUFFER_SIZE);
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
 
 	// Get Stock from DB
 	public List<Stock> getStockListFromDB() {
@@ -89,7 +89,7 @@ public class MarketDataProviderService {
 				double newStockPrice = stock.getPrice() + stock.getPrice() * factor;
 				stock.setPrice(newStockPrice);
 
-				System.out.println(stock.getTicker() + " change to " + df.format(stock.getPrice()) + "\n");
+				System.out.println(stock.getTicker() + " change to " + DECIMAL_FORMAT.format(stock.getPrice()) + "\n");
 
 				// Publish Price Change
 				publishPriceChange(stock, socketChannel);
@@ -102,14 +102,15 @@ public class MarketDataProviderService {
 	}
 
 	private void publishPriceChange(final Stock stock, final SocketChannel channel) throws IOException {
-		buffer.clear();
+		BUFFER.clear();
 		byte[] tickerBytes = stock.getTicker().getBytes();
-		buffer.putInt(tickerBytes.length);
-		buffer.put(tickerBytes);
-		buffer.putDouble(stock.getPrice());
-		buffer.flip();
-		channel.write(buffer);
-		System.out.println("Published: Ticker: " + stock.getTicker() + " Price: " + df.format(stock.getPrice()) + "\n");
+		BUFFER.putInt(tickerBytes.length);
+		BUFFER.put(tickerBytes);
+		BUFFER.putDouble(stock.getPrice());
+		BUFFER.flip();
+		channel.write(BUFFER);
+		System.out.println("Published Price Change: Ticker: " + stock.getTicker() + " Price: "
+				+ DECIMAL_FORMAT.format(stock.getPrice()) + "\n");
 	}
 
 }

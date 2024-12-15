@@ -1,9 +1,10 @@
 package portfolio.result.subscriber;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,8 +20,8 @@ public class PortfolioResultListenerService {
 	private static final List<Integer> COLUMN_SPACING_LIST;
 	private static final int TOTAL_SPACING;
 	private static final String TOTAL_PORTFOLIO_STR = "#Total Portfolio";
-	private static final DecimalFormat df = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
-	private static final StringBuilder sb = new StringBuilder();
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
+	private static final StringBuilder STRING_BUILDER = new StringBuilder();
 
 	static {
 		Map<String, Integer> tmp = new HashMap<>();
@@ -34,54 +35,66 @@ public class PortfolioResultListenerService {
 	}
 
 	public void consumePortfolioNAVResult() {
-		try (ServerSocket serverSocket = new ServerSocket(Settings.PORTFOLIO_NAV_PORT)) {
-			while (true) {
-				try (Socket socket = serverSocket.accept();
-						ObjectInputStream input = new ObjectInputStream(socket.getInputStream())) {
-					byte[] data = (byte[]) input.readObject();
+		// Portfolio NAV Result Listener
+
+		try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
+			serverSocketChannel.bind(new InetSocketAddress(Settings.PORTFOLIO_NAV_RESULT_PORT));
+			try (SocketChannel socketChannel = serverSocketChannel.accept()) {
+
+				while (true) {
+					ByteBuffer lengthBuffer = ByteBuffer.allocate(4);
+					socketChannel.read(lengthBuffer);
+					lengthBuffer.flip();
+					int messageLength = lengthBuffer.getInt();
+
+					// Read the actual message
+					ByteBuffer messageBuffer = ByteBuffer.allocate(messageLength);
+					socketChannel.read(messageBuffer);
+					messageBuffer.flip();
+
 					PortfolioNavResult.PortfolioNAVResult portfolioNAV = PortfolioNavResult.PortfolioNAVResult
-							.parseFrom(data);
+							.parseFrom(messageBuffer.array());
 
 					// Print Headers
 					System.out.println("## " + portfolioNAV.getPriceChangeCount() + " Market Data Update");
 					System.out.println(portfolioNAV.getPriceChangeTicker() + " change to "
-							+ df.format(portfolioNAV.getPriceChangeValue()) + "\n");
+							+ DECIMAL_FORMAT.format(portfolioNAV.getPriceChangeValue()) + "\n");
 					System.out.println("## Portfolio");
 
 					for (Map.Entry<String, Integer> entry : HEADERS_SPACING_MAP.entrySet()) {
 						if ("symbol".equals(entry.getKey())) {
-							sb.append(String.format("%-" + entry.getValue() + "s", entry.getKey()));
+							STRING_BUILDER.append(String.format("%-" + entry.getValue() + "s", entry.getKey()));
 							continue;
 						}
-						sb.append(String.format("%" + entry.getValue() + "s", entry.getKey()));
+						STRING_BUILDER.append(String.format("%" + entry.getValue() + "s", entry.getKey()));
 					}
-					sb.append("\n");
-					System.out.println(sb);
-					sb.setLength(0);
+					STRING_BUILDER.append("\n");
+					System.out.println(STRING_BUILDER);
+					STRING_BUILDER.setLength(0);
 
 					// Print Holdings
 					List<PortfolioNavResult.HoldingNAV> holdings = portfolioNAV.getHoldingList();
 					for (PortfolioNavResult.HoldingNAV holding : holdings) {
-						sb.append(String.format("%-" + COLUMN_SPACING_LIST.get(0) + "s", holding.getSymbol()));
-						sb.append(String.format("%" + COLUMN_SPACING_LIST.get(1) + "s", df.format(holding.getPrice())));
-						sb.append(String.format("%" + COLUMN_SPACING_LIST.get(2) + "s",
-								df.format(holding.getQuantity())));
-						sb.append(String.format("%" + COLUMN_SPACING_LIST.get(3) + "s", df.format(holding.getValue())));
-						sb.append("\n");
-						System.out.println(sb);
-						sb.setLength(0);
+						STRING_BUILDER
+								.append(String.format("%-" + COLUMN_SPACING_LIST.get(0) + "s", holding.getSymbol()));
+						STRING_BUILDER.append(String.format("%" + COLUMN_SPACING_LIST.get(1) + "s",
+								DECIMAL_FORMAT.format(holding.getPrice())));
+						STRING_BUILDER.append(String.format("%" + COLUMN_SPACING_LIST.get(2) + "s",
+								DECIMAL_FORMAT.format(holding.getQuantity())));
+						STRING_BUILDER.append(String.format("%" + COLUMN_SPACING_LIST.get(3) + "s",
+								DECIMAL_FORMAT.format(holding.getValue())));
+						STRING_BUILDER.append("\n");
+						System.out.println(STRING_BUILDER);
+						STRING_BUILDER.setLength(0);
 					}
 
 					// Print Portfolio NAV
-					sb.append("\n" + TOTAL_PORTFOLIO_STR);
-					sb.append(String.format("%" + (TOTAL_SPACING - TOTAL_PORTFOLIO_STR.length()) + "s",
-							df.format(portfolioNAV.getValue())));
-					sb.append("\n");
-					System.out.println(sb);
-					sb.setLength(0);
-
-				} catch (ClassNotFoundException e) {
-					System.err.println("Failed to parse priceChange, error: " + e.getMessage());
+					STRING_BUILDER.append("\n" + TOTAL_PORTFOLIO_STR);
+					STRING_BUILDER.append(String.format("%" + (TOTAL_SPACING - TOTAL_PORTFOLIO_STR.length()) + "s",
+							DECIMAL_FORMAT.format(portfolioNAV.getValue())));
+					STRING_BUILDER.append("\n");
+					System.out.println(STRING_BUILDER);
+					STRING_BUILDER.setLength(0);
 				}
 			}
 		} catch (IOException e) {

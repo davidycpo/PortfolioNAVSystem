@@ -2,9 +2,7 @@ package portfolio.nav.system;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -17,56 +15,79 @@ import model.AssetType;
 import model.Holding;
 import model.Portfolio;
 import model.PortfolioNavResult;
-import service.CsvReader;
 import utils.Settings;
 import utils.Utils;
 
 public class PortfolioNavSystemService {
-	private static final ByteBuffer buffer = ByteBuffer.allocate(Settings.BUFFER_SIZE);
-	private static final byte[] symbolBytes = new byte[6];
-	private static final DecimalFormat df = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
+	private static final ByteBuffer PRICE_CHANGE_BUFFER = ByteBuffer.allocate(Settings.PRICE_CHANGE_BUFFER_SIZE);
+	private static final ByteBuffer PORTFOLIO_NAV_LENGTH_BUFFER = ByteBuffer
+			.allocate(Settings.PORTFOLIO_NAV_LENGTH_BUFFER_SIZE);
+	private static final ByteBuffer PORTFOLIO_NAV_RESULT_BUFFER = ByteBuffer
+			.allocate(Settings.PORTFOLIO_NAV_RESULT_BUFFER_SIZE);
+	private static final byte[] SYMBOL_BYTES = new byte[6];
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
 
 	public void handlePriceChange(Portfolio portfolio) {
-		try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
-			serverSocketChannel.bind(new InetSocketAddress(Settings.PRICE_CHANGE_PORT));
-
+		try (ServerSocketChannel priceChangeServerSocketChannel = ServerSocketChannel.open()) {
+			priceChangeServerSocketChannel.bind(new InetSocketAddress(Settings.PRICE_CHANGE_PORT));
 			// Price Change Listener
-			try (SocketChannel socketChannel = serverSocketChannel.accept()) {
+			try (SocketChannel priceChangeChannel = priceChangeServerSocketChannel.accept()) {
 
-				int priceChangeCount = 1;
-				while (true) {
-					buffer.clear();
-					socketChannel.read(buffer);
-					buffer.flip();
-					int symbolLength = buffer.getInt();
-					buffer.get(symbolBytes, 0, symbolLength);
-					double price = buffer.getDouble();
-					String symbol = new String(symbolBytes, 0, symbolLength);
+				try (SocketChannel portfolioNavResultChannel = SocketChannel
+						.open(new InetSocketAddress(Settings.HOSTNAME, Settings.PORTFOLIO_NAV_RESULT_PORT))) {
 
-					System.out.println("Received Price Change, Ticker: " + symbol + ", Price: " + df.format(price));
+					int priceChangeCount = 1;
+					while (true) {
+						PRICE_CHANGE_BUFFER.clear();
+						priceChangeChannel.read(PRICE_CHANGE_BUFFER);
+						PRICE_CHANGE_BUFFER.flip();
+						int symbolLength = PRICE_CHANGE_BUFFER.getInt();
+						PRICE_CHANGE_BUFFER.get(SYMBOL_BYTES, 0, symbolLength);
+						double price = PRICE_CHANGE_BUFFER.getDouble();
+						String symbol = new String(SYMBOL_BYTES, 0, symbolLength);
 
-					// Update Price in Holding
-					recalculatePortfolioNAVOnPriceChange(portfolio, symbol, price);
+						System.out.println("Received Price Change, Ticker: " + symbol + ", Price: "
+								+ DECIMAL_FORMAT.format(price));
 
-					try (Socket socket = new Socket(Settings.HOSTNAME, Settings.PORTFOLIO_NAV_PORT);
-							ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
+						// Update Price in Holding
+						recalculatePortfolioNAVOnPriceChange(portfolio, symbol, price);
 
-						// Publish
-						PortfolioNavResult.PortfolioNAVResult portfolioNAV = getPortfolioNAV(portfolio, symbol, price,
-								priceChangeCount);
-						output.writeObject(portfolioNAV.toByteArray());
+						// Publish Portfolio Nav Result
+						publishPortfolioNavResult(portfolio, symbol, price, priceChangeCount,
+								portfolioNavResultChannel);
 
-					} catch (IOException e) {
-						System.err.println("Failed to publish price change: " + e.getMessage());
+						priceChangeCount++;
 					}
-
-					priceChangeCount++;
+				} catch (IOException e) {
+					System.err.println("Failed to publish price change: " + e.getMessage());
 				}
-
 			}
 		} catch (IOException e) {
-			System.err.println("Failed to open socket, error: " + e.getMessage());
+			System.err.println("Failed to open socket to consume price change, error: " + e.getMessage());
 		}
+	}
+
+	private void publishPortfolioNavResult(Portfolio portfolio, String symbol, double price, int priceChangeCount,
+			SocketChannel portfolioNavResultChannel) throws IOException {
+		PortfolioNavResult.PortfolioNAVResult portfolioNAV = getPortfolioNAV(portfolio, symbol, price,
+				priceChangeCount);
+
+		byte[] data = portfolioNAV.toByteArray();
+
+		// Send the length of the message first
+		PORTFOLIO_NAV_LENGTH_BUFFER.clear();
+		PORTFOLIO_NAV_LENGTH_BUFFER.putInt(data.length);
+		PORTFOLIO_NAV_LENGTH_BUFFER.flip();
+		portfolioNavResultChannel.write(PORTFOLIO_NAV_LENGTH_BUFFER);
+
+		// Send the actual message
+		PORTFOLIO_NAV_RESULT_BUFFER.clear();
+		PORTFOLIO_NAV_RESULT_BUFFER.put(data);
+		PORTFOLIO_NAV_RESULT_BUFFER.flip();
+		portfolioNavResultChannel.write(PORTFOLIO_NAV_RESULT_BUFFER);
+
+		System.out.println("Published PortfolioNavResult for Price Change, Ticker: " + symbol + ", Price: "
+				+ DECIMAL_FORMAT.format(price));
 	}
 
 	public void calculatePortfolioNAV(Portfolio portfolio) {
