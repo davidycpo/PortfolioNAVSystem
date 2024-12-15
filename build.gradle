@@ -13,6 +13,8 @@ dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.47.1.0'
     implementation 'com.google.protobuf:protobuf-java:4.29.1'
     implementation 'com.google.guava:guava:33.3.1-jre'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
 }
 
 test {
@@ -22,7 +24,22 @@ test {
 jar {
     manifest {
         attributes(
-                'Main-Class': 'org.example.Main'
+                'Main-Class': 'portfolio.nav.system.PortfolioNavSystem'
         )
     }
+}
+
+tasks.register('runPortfolioNavSystem', JavaExec) {
+    mainClass.set('portfolio.nav.system.PortfolioNavSystem')
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.register('runPortfolioResultListener', JavaExec) {
+    mainClass.set('portfolio.result.subscriber.PortfolioResultListener')
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+tasks.register('runMarketDataProvider', JavaExec) {
+    mainClass.set('market.data.provider.MarketDataProvider')
+    classpath = sourceSets.main.runtimeClasspath
 }

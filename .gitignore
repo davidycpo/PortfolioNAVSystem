@@ -45,3 +45,5 @@ default_preference.epf
 /src/main/resources/assetEntity.sqlite
 /src/main/resources/asset.sqlite
 /.idea/csv-editor.xml
+/src/test/resources/test.sqlite
+/.idea/dataSources.xml

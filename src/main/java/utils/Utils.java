@@ -82,7 +82,7 @@ public class Utils {
 		if (date == null)
 			return 0;
 		long differenceInMs = date.getTime() - System.currentTimeMillis();
-		return (double) differenceInMs / (1000 * 60 * 60 * 24 * 365.25);
+		return (double) differenceInMs / (1000d * 60 * 60 * 24 * 365);
 	}
 
 	/*
@@ -101,6 +101,7 @@ public class Utils {
 		double d1 = calculateD1Factor(asset.getPrice(), asset.getStrike(), asset.getAnnualizedStandardDeviation(),
 				timeToMaturity);
 		double d2 = calculateD2Factor(d1, asset.getAnnualizedStandardDeviation(), timeToMaturity);
+
 		// In years
 		if (AssetType.CALL.equals(asset.getAssetType())) {
 			return (asset.getPrice() * Utils.getCumulativeProbability(d1))
@@ -139,6 +140,6 @@ public class Utils {
 
 	private static double calculateD2Factor(double d1Factor, double annualizedStandardDeviation,
 			double timeToMaturity) {
-		return d1Factor - annualizedStandardDeviation * Math.sqrt(timeToMaturity);
+		return d1Factor - (annualizedStandardDeviation * Math.sqrt(timeToMaturity));
 	}
 }

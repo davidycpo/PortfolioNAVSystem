@@ -21,8 +21,8 @@ public class MarketDataProviderService {
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
 
 	// Get Stock from DB
-	public List<Stock> getStockListFromDB() {
-		List<AssetEntity> assetEntities = getAssetEntities();
+	public List<Stock> getStockListFromDB(final String databaseUrl) {
+		List<AssetEntity> assetEntities = getAssetEntities(databaseUrl);
 		if (assetEntities == null)
 			return null;
 
@@ -33,11 +33,11 @@ public class MarketDataProviderService {
 		return stocks;
 	}
 
-	private List<AssetEntity> getAssetEntities() {
+	private List<AssetEntity> getAssetEntities(final String databaseUrl) {
 		List<AssetEntity> assetEntities = new ArrayList<>();
 		Database database = null;
 		try {
-			database = new Database(Settings.DB_URL);
+			database = new Database(databaseUrl);
 			assetEntities = database.getAssetsByType(AssetType.STOCK);
 		} catch (Exception e) {
 			System.err.println("Failed to find assets from db, error: " + e.getMessage());
@@ -101,7 +101,7 @@ public class MarketDataProviderService {
 
 	}
 
-	private void publishPriceChange(final Stock stock, final SocketChannel channel) throws IOException {
+	public void publishPriceChange(final Stock stock, final SocketChannel channel) throws IOException {
 		BUFFER.clear();
 		byte[] tickerBytes = stock.getTicker().getBytes();
 		BUFFER.putInt(tickerBytes.length);

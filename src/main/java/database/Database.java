@@ -19,10 +19,9 @@ public class Database {
 
 	public Database(String url) throws SQLException {
 		connection = DriverManager.getConnection(url);
-		initializeDatabase();
 	}
 
-	private void initializeDatabase() throws SQLException {
+	public void initializeDatabase() throws SQLException {
 		System.out.println("Initializing database...");
 		String createTableSQL = "CREATE TABLE IF NOT EXISTS assets " + "(ticker TEXT, " + "assetType TEXT NOT NULL, "
 				+ "strike REAL," + "maturityDate TEXT, " + "expectedReturn REAL," + "annualizedStandardDeviation REAL,"
@@ -119,7 +118,10 @@ public class Database {
 				String tickerDB = result.getString(1);
 				AssetType assetType = AssetType.valueOf(result.getString(2));
 				double strike = result.getDouble(3);
-				Date maturityDate = result.getDate(4);
+				Date maturityDate = null;
+				if (result.getString(4) != null) {
+					maturityDate = Date.valueOf(result.getString(4));
+				}
 				double expectedReturn = result.getDouble(5);
 				double annualizedStandardDeviation = result.getDouble(6);
 				assetEntities.add(new AssetEntity(tickerDB, assetType, strike, maturityDate, expectedReturn,

@@ -30,14 +30,19 @@ position.csv file.
 1. Generate Java Classes from Protobuf  
    `protoc --java_out=src/main/java src/main/proto/PortfolioNavResult.proto`
 2. Gradle build  
-   `./gradlew build`
+   `./gradle build`
+
+## How to test
+
+Gradle test  
+`./gradle test`
 
 ## How to run
 
 Start the services in this order
 
-1. PortfolioResultListener
-2. PortfolioNAVSystem
+1. PortfolioNAVSystem
+2. PortfolioResultListener
 3. MarketDataProvider
 
 ## Assumption:
@@ -83,8 +88,3 @@ _PortfolioNavResult_
 
 ![System Diagram](diagram/systemDiagram.png)  
 Diagram Source Code: diagram/systemDiagram.puml
-
-## Further Development
-
-* Refactor PortfolioNavResult publisher to publish PortfolioNavResult without using Protobuf. This is to avoid creating
-  new PortfolioNavBuilder in each iteration to further reduce memory usage.

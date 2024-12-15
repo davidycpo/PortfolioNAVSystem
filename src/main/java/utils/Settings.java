@@ -21,7 +21,7 @@ public class Settings {
 	public static final int PORTFOLIO_NAV_RESULT_BUFFER_SIZE = 512;
 
 	// DB
-	public static final String DB_URL = "jdbc:sqlite:src/main/resources/asset.sqlite";
+	public static final String DB_PATH = "jdbc:sqlite:src/main/resources/asset.sqlite";
 	public static final String POSITION_CSV_PATH = "src/main/resources/position.csv";
 
 	// Formatting

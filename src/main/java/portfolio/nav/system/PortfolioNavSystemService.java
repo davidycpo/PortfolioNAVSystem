@@ -90,13 +90,19 @@ public class PortfolioNavSystemService {
 				+ DECIMAL_FORMAT.format(price));
 	}
 
+	// Calculate the Price of each holding by the underlying asset, primarily
+	// used in initialization
 	public void calculatePortfolioNAV(Portfolio portfolio) {
 		for (Holding holding : portfolio.getHoldings()) {
 			holding.calculatePrice();
 		}
 	}
 
-	private void recalculatePortfolioNAVOnPriceChange(Portfolio portfolio, String symbol, double price) {
+	/*
+	 * Recalculate the Price of each holding by the underlying asset, only
+	 * update the holding with matching asset in PriceChange
+	 */
+	public void recalculatePortfolioNAVOnPriceChange(Portfolio portfolio, String symbol, double price) {
 		for (Holding holding : portfolio.getHoldings()) {
 			if (symbol.equals(holding.getAsset().getTicker())) {
 				holding.getAsset().setPrice(price);
@@ -109,7 +115,8 @@ public class PortfolioNavSystemService {
 		// Save asset into DB
 		Database database = null;
 		try {
-			database = new Database(Settings.DB_URL);
+			database = new Database(Settings.DB_PATH);
+			database.initializeDatabase();
 			for (Holding holding : portfolio.getHoldings()) {
 				if (holding.getAsset() == null) {
 					System.err.println("Holding's ticker is null");
@@ -139,7 +146,7 @@ public class PortfolioNavSystemService {
 		} catch (IOException e) {
 			System.err.println("Failed to parse position csv, error: " + e.getMessage());
 		}
-		if (portfolio == null) {
+		if (portfolio == null || portfolio.getHoldings() == null || portfolio.getHoldings().isEmpty()) {
 			System.err.println("No position available");
 			return null;
 		}
@@ -152,6 +159,7 @@ public class PortfolioNavSystemService {
 
 	private PortfolioNavResult.PortfolioNAVResult getPortfolioNAV(final Portfolio portfolio, final String ticker,
 			final double priceChange, final int priceChangeCount) {
+		// TODO Migrate away from Protobuf to reduce memory usage
 		PortfolioNavResult.PortfolioNAVResult.Builder portfolioNavBuilder = PortfolioNavResult.PortfolioNAVResult
 				.newBuilder()
 				.setPriceChangeTicker(ticker)

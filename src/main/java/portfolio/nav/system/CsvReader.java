@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Date;
 import java.text.ParseException;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import com.google.common.base.Charsets;
@@ -63,7 +64,7 @@ public class CsvReader {
 				String maturityDateStr = String.join(" ", maturityMonth, maturityYear);
 				try {
 					maturityDate = Utils.parseDate(maturityDateStr);
-				} catch (ParseException e) {
+				} catch (ParseException | DateTimeParseException e) {
 					System.err.println("Failed to parse maturityDate: " + maturityDateStr + " line #" + count
 							+ " error: " + e.getMessage());
 					count++;
