@@ -25,13 +25,73 @@ public class PortfolioNavSystemService {
 	private static final byte[] SYMBOL_BYTES = new byte[Settings.SYMBOL_BYTE_SIZE];
 	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(Settings.DECIMAL_FORMAT_PATTERN);
 
+	// Parse each holding from CSV file into a single Portfolio
+	public Portfolio parsePortfolioFromCSV(File csv) {
+		// parse position file
+		CsvReader csvReader = new CsvReader();
+		Portfolio portfolio = null;
+		try {
+			portfolio = csvReader.parseCSV(csv);
+		} catch (IOException e) {
+			System.err.println("Failed to parse position csv, error: " + e.getMessage());
+		}
+		if (portfolio == null || portfolio.getHoldings() == null || portfolio.getHoldings().isEmpty()) {
+			System.err.println("No position available");
+			return null;
+		}
+
+		for (Holding holding : portfolio.getHoldings()) {
+			System.out.println(holding);
+		}
+		return portfolio;
+	}
+
+	// Persist each holding in portfolio to DB
+	public void persistPortfolio(Portfolio portfolio) {
+		// Save asset into DB
+		Database database = null;
+		try {
+			database = new Database(Settings.DB_PATH);
+			database.initializeDatabase();
+			for (Holding holding : portfolio.getHoldings()) {
+				if (holding.getAsset() == null) {
+					System.err.println("Holding's ticker is null");
+					continue;
+				}
+				database.insertAsset(holding.getAsset());
+			}
+		} catch (Exception e) {
+			System.err.println("Failed to save portfolio underlying asset into db, error: " + e + e.getMessage());
+		} finally {
+			if (database != null) {
+				try {
+					database.close();
+				} catch (SQLException e) {
+					System.err.println("Failed to close db" + e.getMessage());
+				}
+			}
+		}
+	}
+
+	/*
+	 * Calculate the Price of each holding by the underlying asset, primarily
+	 * used in initialization
+	 */
+	public void calculatePortfolioNAV(Portfolio portfolio) {
+		for (Holding holding : portfolio.getHoldings()) {
+			holding.calculatePrice();
+		}
+	}
+
 	/* Recalculate portfolio NAV based price change and publish NAV result */
 	public void handlePriceChange(Portfolio portfolio) {
+		// Price Change Listener
 		try (ServerSocketChannel priceChangeServerSocketChannel = ServerSocketChannel.open()) {
 			priceChangeServerSocketChannel.bind(new InetSocketAddress(Settings.PRICE_CHANGE_PORT));
-			// Price Change Listener
+			System.out.println("Server up for connection (PriceChange)");
 			try (SocketChannel priceChangeChannel = priceChangeServerSocketChannel.accept()) {
 
+				// Portfolio NAV Result Publisher
 				try (SocketChannel portfolioNavResultChannel = SocketChannel
 						.open(new InetSocketAddress(Settings.HOSTNAME, Settings.PORTFOLIO_NAV_RESULT_PORT))) {
 
@@ -66,6 +126,19 @@ public class PortfolioNavSystemService {
 		}
 	}
 
+	/*
+	 * Recalculate the Price of each holding by the underlying asset, only
+	 * update the holding with matching asset in PriceChange
+	 */
+	public void recalculatePortfolioNAVOnPriceChange(Portfolio portfolio, String symbol, double price) {
+		for (Holding holding : portfolio.getHoldings()) {
+			if (symbol.equals(holding.getAsset().getTicker())) {
+				holding.getAsset().setPrice(price);
+				holding.calculatePrice();
+			}
+		}
+	}
+
 	private void publishPortfolioNavResult(Portfolio portfolio, String symbol, double price, int priceChangeCount,
 			SocketChannel portfolioNavResultChannel) throws IOException {
 		PortfolioNavResult.PortfolioNAVResult portfolioNAV = getPortfolioNAV(portfolio, symbol, price,
@@ -87,75 +160,6 @@ public class PortfolioNavSystemService {
 
 		System.out.println("Published PortfolioNavResult for Price Change, Ticker: " + symbol + ", Price: "
 				+ DECIMAL_FORMAT.format(price));
-	}
-
-	/*
-	 * Calculate the Price of each holding by the underlying asset, primarily
-	 * used in initialization
-	 */
-	public void calculatePortfolioNAV(Portfolio portfolio) {
-		for (Holding holding : portfolio.getHoldings()) {
-			holding.calculatePrice();
-		}
-	}
-
-	/*
-	 * Recalculate the Price of each holding by the underlying asset, only
-	 * update the holding with matching asset in PriceChange
-	 */
-	public void recalculatePortfolioNAVOnPriceChange(Portfolio portfolio, String symbol, double price) {
-		for (Holding holding : portfolio.getHoldings()) {
-			if (symbol.equals(holding.getAsset().getTicker())) {
-				holding.getAsset().setPrice(price);
-				holding.calculatePrice();
-			}
-		}
-	}
-
-	public void persistPortfolio(Portfolio portfolio) {
-		// Save asset into DB
-		Database database = null;
-		try {
-			database = new Database(Settings.DB_PATH);
-			database.initializeDatabase();
-			for (Holding holding : portfolio.getHoldings()) {
-				if (holding.getAsset() == null) {
-					System.err.println("Holding's ticker is null");
-					continue;
-				}
-				database.insertAsset(holding.getAsset());
-			}
-		} catch (Exception e) {
-			System.err.println("Failed to save portfolio underlying asset into db, error: " + e + e.getMessage());
-		} finally {
-			if (database != null) {
-				try {
-					database.close();
-				} catch (SQLException e) {
-					System.err.println("Failed to close db" + e.getMessage());
-				}
-			}
-		}
-	}
-
-	public Portfolio parsePortfolioFromCSV(File csv) {
-		// parse position file
-		CsvReader csvReader = new CsvReader();
-		Portfolio portfolio = null;
-		try {
-			portfolio = csvReader.parseCSV(csv);
-		} catch (IOException e) {
-			System.err.println("Failed to parse position csv, error: " + e.getMessage());
-		}
-		if (portfolio == null || portfolio.getHoldings() == null || portfolio.getHoldings().isEmpty()) {
-			System.err.println("No position available");
-			return null;
-		}
-
-		for (Holding holding : portfolio.getHoldings()) {
-			System.out.println(holding);
-		}
-		return portfolio;
 	}
 
 	private PortfolioNavResult.PortfolioNAVResult getPortfolioNAV(final Portfolio portfolio, final String ticker,

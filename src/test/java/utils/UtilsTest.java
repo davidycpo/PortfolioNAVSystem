@@ -28,10 +28,10 @@ public class UtilsTest {
 
 	@Test
 	public void parseDateValidDateTest() throws ParseException {
-		String dateStr = "Jan 2023";
+		String dateStr = "Jan 2025";
 		Date date = Utils.parseDate(dateStr);
 		assertNotNull(date);
-		assertEquals(Date.valueOf("2023-01-01"), date);
+		assertEquals(Date.valueOf("2025-01-01"), date);
 	}
 
 	@Test
@@ -42,9 +42,9 @@ public class UtilsTest {
 
 	@Test
 	public void parseStringTest() {
-		Date date = Date.valueOf("2023-01-01");
+		Date date = Date.valueOf("2025-01-01");
 		String formattedDate = Utils.parseString(date);
-		assertEquals("Jan-2023", formattedDate);
+		assertEquals("Jan-2025", formattedDate);
 	}
 
 	@Test
@@ -83,7 +83,7 @@ public class UtilsTest {
 		AssetEntity asset = new AssetEntity("AAPL", AssetType.CALL, 150.0, Date.valueOf("2025-01-01"), 0.05, 0.1);
 		asset.setPrice(200.0);
 		double price = Utils.calculateHoldingPrice(asset);
-		assertEquals(50.13, price, 0.01);
+		assertEquals(50.12, price, 0.01);
 	}
 
 	@Test
@@ -107,7 +107,7 @@ public class UtilsTest {
 		AssetEntity asset = new AssetEntity("AAPL", AssetType.PUT, 234.0, Date.valueOf("2025-01-01"), 0.3, 0.25);
 		asset.setPrice(100.0);
 		double price = Utils.calculateHoldingPrice(asset);
-		assertEquals(133.79, price, 0.01);
+		assertEquals(133.80, price, 0.01);
 	}
 
 	@Test

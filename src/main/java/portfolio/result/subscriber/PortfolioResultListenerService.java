@@ -40,9 +40,9 @@ public class PortfolioResultListenerService {
 
 	public void consumePortfolioNAVResult() {
 		// Portfolio NAV Result Listener
-
 		try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
 			serverSocketChannel.bind(new InetSocketAddress(Settings.PORTFOLIO_NAV_RESULT_PORT));
+			System.out.println("Server up for connection (PortfolioNAVResult)");
 			try (SocketChannel socketChannel = serverSocketChannel.accept()) {
 
 				while (true) {
@@ -60,12 +60,12 @@ public class PortfolioResultListenerService {
 					byte[] resultBytes = new byte[resultLength];
 					PORTFOLIO_NAV_RESULT_BUFFER.get(resultBytes);
 
-					PortfolioNavResult.PortfolioNAVResult portfolioNAV = PortfolioNavResult.PortfolioNAVResult
+					PortfolioNavResult.PortfolioNAVResult portfolioNAVResult = PortfolioNavResult.PortfolioNAVResult
 							.parseFrom(resultBytes);
 					// Print Headers
-					System.out.println("## " + portfolioNAV.getPriceChangeCount() + " Market Data Update");
-					System.out.println(portfolioNAV.getPriceChangeTicker() + " change to "
-							+ DECIMAL_FORMAT.format(portfolioNAV.getPriceChangeValue()) + "\n");
+					System.out.println("## " + portfolioNAVResult.getPriceChangeCount() + " Market Data Update");
+					System.out.println(portfolioNAVResult.getPriceChangeTicker() + " change to "
+							+ DECIMAL_FORMAT.format(portfolioNAVResult.getPriceChangeValue()) + "\n");
 					System.out.println("## Portfolio");
 
 					for (Map.Entry<String, Integer> entry : HEADERS_SPACING_MAP.entrySet()) {
@@ -80,7 +80,7 @@ public class PortfolioResultListenerService {
 					STRING_BUILDER.setLength(0);
 
 					// Print Holdings
-					List<PortfolioNavResult.HoldingNAV> holdings = portfolioNAV.getHoldingList();
+					List<PortfolioNavResult.HoldingNAV> holdings = portfolioNAVResult.getHoldingList();
 					for (PortfolioNavResult.HoldingNAV holding : holdings) {
 						STRING_BUILDER
 								.append(String.format("%-" + COLUMN_SPACING_LIST.get(0) + "s", holding.getSymbol()));
@@ -95,10 +95,10 @@ public class PortfolioResultListenerService {
 						STRING_BUILDER.setLength(0);
 					}
 
-					// Print Portfolio NAV
+					// Print Portfolio NAV Result
 					STRING_BUILDER.append("\n" + TOTAL_PORTFOLIO_STR);
 					STRING_BUILDER.append(String.format("%" + (TOTAL_SPACING - TOTAL_PORTFOLIO_STR.length()) + "s",
-							DECIMAL_FORMAT.format(portfolioNAV.getValue())));
+							DECIMAL_FORMAT.format(portfolioNAVResult.getValue())));
 					STRING_BUILDER.append("\n");
 					System.out.println(STRING_BUILDER);
 					STRING_BUILDER.setLength(0);

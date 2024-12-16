@@ -60,6 +60,7 @@ public class Utils {
 		return 0.5 * (1 + errorFunction(x / Math.sqrt(2)));
 	}
 
+	// Approximate error function with elementary functions
 	private static double errorFunction(double x) {
 		double sign = (x >= 0) ? 1 : -1;
 		x = Math.abs(x);

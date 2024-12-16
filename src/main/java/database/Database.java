@@ -21,6 +21,7 @@ public class Database {
 		connection = DriverManager.getConnection(url);
 	}
 
+	// Create table
 	public void initializeDatabase() throws SQLException {
 		System.out.println("Initializing database...");
 		String createTableSQL = "CREATE TABLE IF NOT EXISTS assets " + "(ticker TEXT, " + "assetType TEXT NOT NULL, "

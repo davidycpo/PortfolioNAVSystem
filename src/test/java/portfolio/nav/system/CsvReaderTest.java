@@ -28,7 +28,7 @@ public class CsvReaderTest {
 	public void parseValidCsvFileTest() throws IOException {
 		// Prepare a valid CSV file
 		File csvFile = createTempCsvFile(
-				"symbol,positionSize\n" + "AAPL-JAN-2023-150-C,10\n" + "GOOGL,5\n" + "TELSA-MAR-2025-150-P,5\n");
+				"symbol,positionSize\n" + "AAPL-JAN-2025-150-C,10\n" + "GOOGL,5\n" + "TELSA-MAR-2025-150-P,5\n");
 
 		Portfolio portfolio = csvReader.parseCSV(csvFile);
 
@@ -40,7 +40,7 @@ public class CsvReaderTest {
 		assertEquals(AssetType.CALL, holding1.getAsset().getAssetType());
 		assertEquals(150.0, holding1.getAsset().getStrike());
 		assertEquals(10, holding1.getPosition());
-		assertEquals("2023-01-01", holding1.getAsset().getMaturityDate().toString());
+		assertEquals("2025-01-01", holding1.getAsset().getMaturityDate().toString());
 
 		Holding holding2 = portfolio.getHoldings().get(1);
 		assertEquals("GOOGL", holding2.getAsset().getTicker());

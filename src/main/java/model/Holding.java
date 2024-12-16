@@ -28,10 +28,12 @@ public class Holding {
 		this.price = price;
 	}
 
+	// Calculate the holding's price based on the price of the underlying asset
 	public void calculatePrice() {
 		this.price = Utils.calculateHoldingPrice(asset);
 	}
 
+	// Calculate the value of holding on the fly
 	public double getValue() {
 		if (price == 0d || position == 0d) {
 			return 0d;

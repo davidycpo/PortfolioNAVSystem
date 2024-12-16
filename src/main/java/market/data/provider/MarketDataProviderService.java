@@ -22,7 +22,7 @@ public class MarketDataProviderService {
 
 	// Get Stock from DB
 	public List<Stock> getStockListFromDB(final String databaseUrl) {
-		List<AssetEntity> assetEntities = getAssetEntities(databaseUrl);
+		List<AssetEntity> assetEntities = getAllStocksFromDB(databaseUrl);
 		if (assetEntities == null)
 			return null;
 
@@ -31,6 +31,31 @@ public class MarketDataProviderService {
 			stocks.add(Utils.toStock(asset, Settings.MIN_RANDOM_VALUE, Settings.MAX_RANDOM_VALUE));
 		}
 		return stocks;
+	}
+
+	private List<AssetEntity> getAllStocksFromDB(final String databaseUrl) {
+		List<AssetEntity> assetEntities = new ArrayList<>();
+		Database database = null;
+		try {
+			database = new Database(databaseUrl);
+			assetEntities = database.getAssetsByType(AssetType.STOCK);
+		} catch (Exception e) {
+			System.err.println("Failed to find assets from db, error: " + e.getMessage());
+		} finally {
+			if (database != null) {
+				try {
+					database.close();
+				} catch (SQLException e) {
+					System.err.println("Failed to close db" + e.getMessage());
+				}
+			}
+		}
+
+		if (assetEntities == null || assetEntities.isEmpty()) {
+			System.err.println("No stock asset is found");
+			return null;
+		}
+		return assetEntities;
 	}
 
 	// Simulate stock movement and publish price change
@@ -85,31 +110,6 @@ public class MarketDataProviderService {
 		channel.write(BUFFER);
 		System.out.println("Published Price Change: Ticker: " + stock.getTicker() + " Price: "
 				+ DECIMAL_FORMAT.format(stock.getPrice()) + "\n");
-	}
-
-	private List<AssetEntity> getAssetEntities(final String databaseUrl) {
-		List<AssetEntity> assetEntities = new ArrayList<>();
-		Database database = null;
-		try {
-			database = new Database(databaseUrl);
-			assetEntities = database.getAssetsByType(AssetType.STOCK);
-		} catch (Exception e) {
-			System.err.println("Failed to find assets from db, error: " + e.getMessage());
-		} finally {
-			if (database != null) {
-				try {
-					database.close();
-				} catch (SQLException e) {
-					System.err.println("Failed to close db" + e.getMessage());
-				}
-			}
-		}
-
-		if (assetEntities == null || assetEntities.isEmpty()) {
-			System.err.println("No stock asset is found");
-			return null;
-		}
-		return assetEntities;
 	}
 
 }

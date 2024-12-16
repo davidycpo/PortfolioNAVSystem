@@ -27,7 +27,7 @@ out/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
-default_preference.epf
+formatter.epf
 
 ### NetBeans ###
 /nbproject/private/
@@ -47,3 +47,5 @@ default_preference.epf
 /.idea/csv-editor.xml
 /src/test/resources/test.sqlite
 /.idea/dataSources.xml
+/formatter.epf
+/src/main/java/model/PortfolioNavResult.java
