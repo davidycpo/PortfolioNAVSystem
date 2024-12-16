@@ -58,6 +58,7 @@ public class PortfolioResultListenerService {
 					PORTFOLIO_NAV_RESULT_BUFFER.flip();
 
 					byte[] resultBytes = new byte[resultLength];
+
 					PORTFOLIO_NAV_RESULT_BUFFER.get(resultBytes);
 
 					PortfolioNavResult.PortfolioNAVResult portfolioNAVResult = PortfolioNavResult.PortfolioNAVResult

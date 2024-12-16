@@ -17,7 +17,7 @@ position.csv file.
 
 1. Read the available stocks from DB (SQLite)
 2. Simulate stock movement by generating PriceChange according to a discrete geometric Brownian motion at a random
-   interval (0.5-2seconds)
+   interval (0.5-2 seconds)
 3. Publish the PriceChange to the PortfolioNAVSystem
 
 ### PortfolioResultListener
@@ -49,8 +49,8 @@ Start the services in this order
 
 1. Symbol length is variable between 4-6 bytes
 2. A random stock is picked at a random interval between 0.5-2 seconds
-3. The maturity date of any option is also after the current date
-4. There is less than 10 holdings in the portfolio
+3. The maturity date of any option is always after the current date
+4. There are less than 10 holdings in the portfolio
 
 ## ByteBuffer Allocation
 
@@ -88,3 +88,9 @@ _PortfolioNavResult_
 
 ![System Diagram](diagram/systemDiagram.png)  
 Diagram Source Code: diagram/systemDiagram.puml
+
+Future Development
+
+1. Migrate away from Protobuf to avoid creating new objects in while loop
+2. Refactor MarketDatProvider to be the server and PortfolioNavSystem to be the client of PriceChange
+3. Refactor PortfolioNavSystem to be the server and PortfolioResultListener to be the client of PortfolioNavResult
